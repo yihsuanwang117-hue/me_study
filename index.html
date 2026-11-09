@@ -238,45 +238,79 @@
 
     // 題目資料庫（展示用：神經科學交錯題庫 + 德西雙軌）
     const CONTENT_STORE = {
-      neuro: [
+    neuro: {
+      desktop: [
         {
-          id: "neu_1",
-          track: "硬核機制軌 (Level 1/2)",
-          title: "動作電位與不應期機制 (Action Potential & Refractory Period)",
-          prompt: "【電腦端驗收 · 英文論述】\n請簡述絕對不應期（Absolute Refractory Period）與相對不應期（Relative Refractory Period）在電壓門控鈉/鉀離子通道動力學上的分子機制差異，並說明此機制如何保證動作電位的單向傳導。",
+          id: "neu_d1",
+          track: "神經科學 · 機制推導 (Level 1/2)",
+          title: "動作電位離子動力學與單向傳導機制",
+          prompt: "【電腦端驗收 · 英文論述】\n請說明電壓門控鈉通道（Nav）去活化（Inactivation）與活化（Activation）的差異，並深入解釋絕對不應期與相對不應期如何透過分子機制確保動作電位沿軸突「單向（Unidirectional）」傳導。",
           unitReward: 0.5,
-          mode: "desktop"
-        },
-        {
-          id: "neu_2",
-          track: "實驗/統計工具軌 (Level 4)",
-          title: "全細胞膜片鉗 I-V 曲線判讀 (Whole-cell Patch Clamp)",
-          prompt: "【手機/零碎辨識】\n在 -65 mV 翻轉電位下，細胞外施加 TTX 後內向電流完全消失。此內向電流主要由何種離子攜帶？其門控變數由何者主導？",
-          unitReward: 0.1,
-          mode: "mobile"
+          minWords: 15,
+          keywords: ["inactivation", "sodium", "refractory", "h-gate", "unidirectional", "depolarization"],
+          reference: "標準因果鏈：去極化觸發 m-gate 開啟（活化），約 1ms 後胞內 h-gate 快速關閉阻斷離子流（去活化）。此去活化狀態導致絕對不應期，即使強刺激也無法引發動作電位，因此逆向擴散的局部電流無法興奮剛去極化完的軸突膜，確保傳導嚴格單向。"
         }
       ],
-      german: [
+      mobile: [
         {
-          id: "de_1",
-          track: "A1 格位檢索 (Nominativ / Akkusativ)",
-          title: "介系詞與受詞格位判定",
-          prompt: "【零碎複習】請填入正確冠詞形式：\nIch kaufe _____ (der) Computer für _____ (mein) Bruder.",
+          id: "neu_m1",
+          track: "神經科學 · 隨身速記",
+          title: "神經遞質受體分類辨別",
+          prompt: "【手機速記 · 概念快檢】\nNMDA 受體在靜止膜電位下被哪一種二價陽離子阻斷？",
           unitReward: 0.1,
-          mode: "mobile"
-        }
-      ],
-      spanish: [
-        {
-          id: "es_1",
-          track: "A2 過去時態對比",
-          title: "Indefinido vs. Imperfecto",
-          prompt: "【語境選擇】\nCuando era niño, siempre _____ (jugar) en el parque, pero un día _____ (romperse) la pierna.",
-          unitReward: 0.1,
-          mode: "mobile"
+          answers: ["mg2+", "鎂", "鎂離子", "magnesium", "mg"]
         }
       ]
-    };
+    },
+    german: {
+      desktop: [
+        {
+          id: "de_d1",
+          track: "德文 · A1 結構造句",
+          title: "從屬子句 (weil) 與動詞後置",
+          prompt: "【電腦端驗收 · 骨架組裝】\n請將這兩句合併為一個帶有 'weil' 的句子，注意動詞詞序：\n1. Ich lerne heute fleißig Deutsch.\n2. Ich möchte 2027 in Deutschland studieren.",
+          unitReward: 0.2,
+          minWords: 8,
+          keywords: ["weil", "studieren", "möchte"],
+          reference: "Ich lerne heute fleißig Deutsch, weil ich 2027 in Deutschland studieren möchte."
+        }
+      ],
+      mobile: [
+        {
+          id: "de_m1",
+          track: "德文 · A1 格位快問",
+          title: "Akkusativ 定冠詞變位",
+          prompt: "【手機速記 · 填空】\nDer Mann kauft _____ (der) Tisch. (請填入正確冠詞形式)",
+          unitReward: 0.1,
+          answers: ["den"]
+        }
+      ]
+    },
+    spanish: {
+      desktop: [
+        {
+          id: "es_d1",
+          track: "西文 · A2 時態深度辨析",
+          title: "Indefinido 與 Imperfecto 綜合寫作",
+          prompt: "【電腦端驗收 · 段落推導】\n請造一個包含「持續背景（Imperfecto）」與「突發動作（Indefinido）」的複式句。",
+          unitReward: 0.2,
+          minWords: 6,
+          keywords: ["cuando", "mientras"],
+          reference: "Cuando yo dormía, sonó el teléfono."
+        }
+      ],
+      mobile: [
+        {
+          id: "es_m1",
+          track: "西文 · A2 動詞變位快篩",
+          title: "不規則動詞 Indefinido",
+          prompt: "【手機速記】\n動詞 'hacer' 在第三人稱單數 (él/ella) 的 Indefinido 變位是？",
+          unitReward: 0.1,
+          answers: ["hizo"]
+        }
+      ]
+    }
+  };
 
     // 應用程式全域狀態
     let currentUser = null;
@@ -381,24 +415,64 @@
       document.getElementById("reward-unit").textContent = `+${item.unitReward}`;
     };
 
-    // 6. 提交作答並推送到 Firebase
+  // 6. 提交作答（含驗收與防呆檢驗）
     window.submitProgress = async function() {
-      if (!currentUser) return;
       const list = CONTENT_STORE[currentSubject];
       const item = list[0];
-      const unit = item.unitReward;
+      const userAns = document.getElementById("user-ans").value.trim();
 
-      const docRef = doc(db, `users/${currentUser.uid}/daily_logs/${todayDate}`);
-      
-      // 更新 Firestore 計數器
-      await updateDoc(docRef, {
-        [currentSubject]: increment(unit)
-      });
+      // 1. 空值防呆檢驗
+      if (!userAns) {
+        alert("⚠️ 請先輸入回答內容後再提交驗收！");
+        return;
+      }
 
-      document.getElementById("user-ans").value = "";
-      alert(`已提交驗收！累計 ${currentSubject} +${unit} 單位進度`);
+      let isPassed = false;
+
+      // 2. 依模式進行檢驗
+      if (item.mode === "mobile") {
+        // 手機端：比對特定答案
+        const cleanAns = userAns.toLowerCase();
+        const validAnswers = (item.answers || []).map(a => a.toLowerCase());
+        
+        if (validAnswers.includes(cleanAns)) {
+          isPassed = true;
+          alert(`🎉 回答正確！獲得 +${item.unitReward} 單位進度。`);
+        } else {
+          alert(`❌ 答案有誤。\n您的回答：${userAns}\n參考正解：${item.answers ? item.answers[0] : "無"}`);
+          return;
+        }
+      } else {
+        // 電腦端：論述字數與核心關鍵字檢驗
+        const text = userAns.toLowerCase();
+        const matchedKeys = (item.keywords || []).filter(k => text.includes(k.toLowerCase()));
+        
+        if (userAns.length < (item.minWords || 10)) {
+          alert(`⚠️ 論述內容過短（請至少輸入 ${item.minWords || 10} 個字元以上）。`);
+          return;
+        }
+
+        isPassed = true;
+        const feedback = item.reference 
+          ? `\n\n【標準因果機制對照】：\n${item.reference}` 
+          : "";
+        alert(`✅ 已完成推導驗收！\n檢索命中核心標籤數：${matchedKeys.length} / ${(item.keywords || []).length}${feedback}`);
+      }
+
+      // 3. 通過驗收後才增加進度與存檔
+      if (isPassed) {
+        const unit = item.unitReward;
+
+        if (currentUser) {
+          const docRef = doc(db, `users/${currentUser.uid}/daily_logs/${todayDate}`);
+          await updateDoc(docRef, {
+            [currentSubject]: increment(unit)
+          });
+        }
+
+        document.getElementById("user-ans").value = "";
+      }
     };
-
     // 切換學科與裝置模式
     window.switchSubject = (sub) => {
       currentSubject = sub;
