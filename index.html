@@ -389,8 +389,11 @@
     }
 
     // 5. 渲染當前學習卡片
+  // 5. 渲染當前學習卡片（加入防呆與結構相容）
     window.renderCard = function() {
-      const isSubLocked = (dailyData.neuro < 1.0) && (((dailyData.german || 0) + (dailyData.spanish || 0)) >= 0.5);
+      const neuroUnits = dailyData.neuro || 0;
+      const subUnits = (dailyData.german || 0) + (dailyData.spanish || 0);
+      const isSubLocked = (neuroUnits < 1.0) && (subUnits >= 0.5);
       
       // 若副線被鎖定且使用者停留在副線
       if (isSubLocked && (currentSubject === "german" || currentSubject === "spanish")) {
@@ -399,20 +402,38 @@
       }
       lockOverlayEl.style.display = "none";
 
-      const list = CONTENT_STORE[currentSubject];
-      const item = list[0]; // 展示目前第一道題目
+      // 安全取得題目列表（相容單層陣列或雙層物件結構）
+      let rawSubject = CONTENT_STORE[currentSubject];
+      let list = [];
+      if (Array.isArray(rawSubject)) {
+        list = rawSubject;
+      } else if (rawSubject && typeof rawSubject === "object") {
+        list = rawSubject[currentDeviceMode] || rawSubject.desktop || rawSubject.mobile || [];
+      }
 
-      document.getElementById("card-badge").textContent = item.track;
+      // 若完全找不到題目，顯示提示防呆，不讓程式崩潰
+      if (!list || list.length === 0 || !list[0]) {
+        document.getElementById("card-badge").textContent = "無題目";
+        document.getElementById("card-title").textContent = "此學科目前無可用題目";
+        document.getElementById("card-prompt").textContent = "請確認 CONTENT_STORE 題庫設定。";
+        document.getElementById("reward-unit").textContent = "+0.0";
+        return;
+      }
+
+      // 取出當前題目
+      const item = list[0];
+
+      document.getElementById("card-badge").textContent = item.track || "核心進度";
       document.getElementById("card-badge").className = `badge badge-${currentSubject}`;
-      document.getElementById("card-title").textContent = item.title;
-      document.getElementById("card-prompt").textContent = item.prompt;
+      document.getElementById("card-title").textContent = item.title || "";
+      document.getElementById("card-prompt").textContent = item.prompt || "";
       
       const inputContainer = document.getElementById("input-container");
-      inputContainer.innerHTML = item.mode === "desktop" 
-        ? `<textarea id="user-ans" placeholder="請在此輸入機制因果推導或論述..."></textarea>`
-        : `<input type="text" id="user-ans" placeholder="輸入答案或辨識結果..." autocomplete="off">`;
+      inputContainer.innerHTML = (item.mode === "desktop" || !item.mode)
+        ? `<textarea id="user-ans" placeholder="【電腦驗收】請在此輸入機制因果推導或論述..."></textarea>`
+        : `<input type="text" id="user-ans" placeholder="【手機速記】請在此輸入答案..." autocomplete="off">`;
 
-      document.getElementById("reward-unit").textContent = `+${item.unitReward}`;
+      document.getElementById("reward-unit").textContent = `+${item.unitReward || 0.1}`;
     };
 
   // 6. 提交作答（含驗收與防呆檢驗）
