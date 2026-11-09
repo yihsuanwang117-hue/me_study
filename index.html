@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neuro & Language Matrix | 自適應雙軌學習系統</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-neuro: #38bdf8;
+      --accent-german: #f59e0b;
+      --accent-spanish: #10b981;
+      --locked-red: #ef4444;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 760px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Auth & Sync Header */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    .user-info { font-size: 0.85rem; color: var(--text-muted); }
+    .sync-status { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; margin-right: 6px; }
+
+    /* Dashboard: 進度與互鎖指示 */
+    .dashboard {
+      background: var(--card-bg);
+      padding: 18px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .track-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .track-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .progress-bar-bg {
+      height: 10px;
+      background: #0f172a;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    /* Mode Selector (Device Context) */
+    .device-switcher {
+      display: flex;
+      background: var(--card-bg);
+      border-radius: 10px;
+      padding: 4px;
+      border: 1px solid var(--border);
+    }
+    .device-btn {
+      flex: 1;
+      padding: 8px 12px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+    .device-btn.active {
+      background: var(--border);
+      color: var(--text);
+    }
+
+    /* Subject Tabs */
+    .tabs {
+      display: flex;
+      gap: 8px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      color: var(--text-muted);
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      color: var(--text);
+      border-color: var(--accent-neuro);
+    }
+    .tab-btn.locked {
+      border-color: var(--locked-red);
+      color: var(--locked-red);
+      opacity: 0.7;
+    }
+
+    /* Learning Card Core */
+    .stage-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 24px;
+      min-height: 280px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .badge-neuro { background: rgba(56, 189, 248, 0.2); color: var(--accent-neuro); }
+    .badge-german { background: rgba(245, 158, 11, 0.2); color: var(--accent-german); }
+    .badge-spanish { background: rgba(16, 185, 129, 0.2); color: var(--accent-spanish); }
+
+    .card-title { font-size: 1.15rem; margin-bottom: 12px; }
+    .card-prompt { font-size: 0.95rem; color: #cbd5e1; margin-bottom: 16px; white-space: pre-line; }
+
+    /* Answer Area */
+    .input-area { margin-bottom: 16px; }
+    textarea, input[type="text"] {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      color: #fff;
+      font-size: 0.95rem;
+      font-family: inherit;
+    }
+    textarea { height: 110px; resize: none; }
+
+    .action-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    .btn {
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      background: #3b82f6;
+      color: #fff;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: #2563eb; }
+    .btn:disabled { background: #475569; cursor: not-allowed; }
+
+    /* Lock Overlay */
+    .lock-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.95);
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+      text-align: center;
+      gap: 12px;
+    }
+  </style>
+
+  <!-- Firebase Scripts (Modular CDN v10) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+    import { getFirestore, doc, onSnapshot, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+
+    // 1. 請替換為您的 Firebase 專案設定
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // 取得台北標準時間 YYYY-MM-DD
+    const getTaipeiDate = () => {
+      const now = new Date();
+      return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei' }).format(now);
+    };
+
+    // 題目資料庫（展示用：神經科學交錯題庫 + 德西雙軌）
+    const CONTENT_STORE = {
+      neuro: [
+        {
+          id: "neu_1",
+          track: "硬核機制軌 (Level 1/2)",
+          title: "動作電位與不應期機制 (Action Potential & Refractory Period)",
+          prompt: "【電腦端驗收 · 英文論述】\n請簡述絕對不應期（Absolute Refractory Period）與相對不應期（Relative Refractory Period）在電壓門控鈉/鉀離子通道動力學上的分子機制差異，並說明此機制如何保證動作電位的單向傳導。",
+          unitReward: 0.5,
+          mode: "desktop"
+        },
+        {
+          id: "neu_2",
+          track: "實驗/統計工具軌 (Level 4)",
+          title: "全細胞膜片鉗 I-V 曲線判讀 (Whole-cell Patch Clamp)",
+          prompt: "【手機/零碎辨識】\n在 -65 mV 翻轉電位下，細胞外施加 TTX 後內向電流完全消失。此內向電流主要由何種離子攜帶？其門控變數由何者主導？",
+          unitReward: 0.1,
+          mode: "mobile"
+        }
+      ],
+      german: [
+        {
+          id: "de_1",
+          track: "A1 格位檢索 (Nominativ / Akkusativ)",
+          title: "介系詞與受詞格位判定",
+          prompt: "【零碎複習】請填入正確冠詞形式：\nIch kaufe _____ (der) Computer für _____ (mein) Bruder.",
+          unitReward: 0.1,
+          mode: "mobile"
+        }
+      ],
+      spanish: [
+        {
+          id: "es_1",
+          track: "A2 過去時態對比",
+          title: "Indefinido vs. Imperfecto",
+          prompt: "【語境選擇】\nCuando era niño, siempre _____ (jugar) en el parque, pero un día _____ (romperse) la pierna.",
+          unitReward: 0.1,
+          mode: "mobile"
+        }
+      ]
+    };
+
+    // 應用程式全域狀態
+    let currentUser = null;
+    let todayDate = getTaipeiDate();
+    let currentSubject = "neuro";
+    let currentDeviceMode = "desktop"; // 'mobile' | 'desktop'
+    let dailyData = {
+      neuro: 0,
+      german: 0,
+      spanish: 0
+    };
+
+    // UI 元件
+    const authStatusEl = document.getElementById("auth-status");
+    const neuroFillEl = document.getElementById("neuro-fill");
+    const neuroTextEl = document.getElementById("neuro-text");
+    const subFillEl = document.getElementById("sub-fill");
+    const subTextEl = document.getElementById("sub-text");
+    const lockOverlayEl = document.getElementById("lock-overlay");
+    const cardContainerEl = document.getElementById("card-body");
+
+    // 2. 身份驗證初始化（自動匿名登入以同步狀態）
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        authStatusEl.textContent = `同步中 ID: ${user.uid.slice(0, 6)}...`;
+        listenToDailyLog(user.uid);
+      } else {
+        await signInAnonymously(auth);
+      }
+    });
+
+    // 3. 即時監聽當日進度與互鎖狀態
+    function listenToDailyLog(uid) {
+      const docRef = doc(db, `users/${uid}/daily_logs/${todayDate}`);
+      onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+          dailyData = docSnap.data();
+        } else {
+          // 初始化今日文檔
+          setDoc(docRef, { neuro: 0, german: 0, spanish: 0 });
+        }
+        renderDashboard();
+        renderCard();
+      });
+    }
+
+    // 4. 儀表板與解鎖狀態判定
+    function renderDashboard() {
+      const neuroUnits = dailyData.neuro || 0;
+      const subUnits = (dailyData.german || 0) + (dailyData.spanish || 0);
+
+      // 神經科學 (主線：1.0 達標)
+      const neuroPct = Math.min((neuroUnits / 1.0) * 100, 100);
+      neuroFillEl.style.width = `${neuroPct}%`;
+      neuroFillEl.style.background = "var(--accent-neuro)";
+      neuroTextEl.textContent = `${neuroUnits.toFixed(1)} / 1.0 單位 ${neuroUnits >= 1.0 ? '✓ 達標' : ''}`;
+
+      // 副線語言 (門檻：0.5 額度制衡)
+      const isNeuroComplete = neuroUnits >= 1.0;
+      const subPct = isNeuroComplete ? 100 : Math.min((subUnits / 0.5) * 100, 100);
+      subFillEl.style.width = `${subPct}%`;
+      
+      if (!isNeuroComplete && subUnits >= 0.5) {
+        // 觸發互鎖：副線用完，主線未滿
+        subFillEl.style.background = "var(--locked-red)";
+        subTextEl.textContent = `${subUnits.toFixed(1)} / 0.5 (已達上限 · 鎖定中 🔒)`;
+        document.getElementById("tab-german").classList.add("locked");
+        document.getElementById("tab-spanish").classList.add("locked");
+      } else {
+        subFillEl.style.background = isNeuroComplete ? "#22c55e" : "var(--accent-german)";
+        subTextEl.textContent = isNeuroComplete ? `${subUnits.toFixed(1)} (全科自由模式 ✨)` : `${subUnits.toFixed(1)} / 0.5 額度`;
+        document.getElementById("tab-german").classList.remove("locked");
+        document.getElementById("tab-spanish").classList.remove("locked");
+      }
+    }
+
+    // 5. 渲染當前學習卡片
+    window.renderCard = function() {
+      const isSubLocked = (dailyData.neuro < 1.0) && (((dailyData.german || 0) + (dailyData.spanish || 0)) >= 0.5);
+      
+      // 若副線被鎖定且使用者停留在副線
+      if (isSubLocked && (currentSubject === "german" || currentSubject === "spanish")) {
+        lockOverlayEl.style.display = "flex";
+        return;
+      }
+      lockOverlayEl.style.display = "none";
+
+      const list = CONTENT_STORE[currentSubject];
+      const item = list[0]; // 展示目前第一道題目
+
+      document.getElementById("card-badge").textContent = item.track;
+      document.getElementById("card-badge").className = `badge badge-${currentSubject}`;
+      document.getElementById("card-title").textContent = item.title;
+      document.getElementById("card-prompt").textContent = item.prompt;
+      
+      const inputContainer = document.getElementById("input-container");
+      inputContainer.innerHTML = item.mode === "desktop" 
+        ? `<textarea id="user-ans" placeholder="請在此輸入機制因果推導或論述..."></textarea>`
+        : `<input type="text" id="user-ans" placeholder="輸入答案或辨識結果..." autocomplete="off">`;
+
+      document.getElementById("reward-unit").textContent = `+${item.unitReward}`;
+    };
+
+    // 6. 提交作答並推送到 Firebase
+    window.submitProgress = async function() {
+      if (!currentUser) return;
+      const list = CONTENT_STORE[currentSubject];
+      const item = list[0];
+      const unit = item.unitReward;
+
+      const docRef = doc(db, `users/${currentUser.uid}/daily_logs/${todayDate}`);
+      
+      // 更新 Firestore 計數器
+      await updateDoc(docRef, {
+        [currentSubject]: increment(unit)
+      });
+
+      document.getElementById("user-ans").value = "";
+      alert(`已提交驗收！累計 ${currentSubject} +${unit} 單位進度`);
+    };
+
+    // 切換學科與裝置模式
+    window.switchSubject = (sub) => {
+      currentSubject = sub;
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      document.getElementById(`tab-${sub}`).classList.add("active");
+      renderCard();
+    };
+
+    window.setDeviceMode = (mode) => {
+      currentDeviceMode = mode;
+      document.querySelectorAll(".device-btn").forEach(b => b.classList.remove("active"));
+      document.getElementById(`mode-${mode}`).classList.add("active");
+    };
+  </script>
+</head>
+<body>
+
+<div class="container">
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="user-info">
+      <span class="sync-status"></span><span id="auth-status">連線中...</span>
+    </div>
+    <div class="device-switcher">
+      <button id="mode-desktop" class="device-btn active" onclick="setDeviceMode('desktop')">💻 電腦深研</button>
+      <button id="mode-mobile" class="device-btn" onclick="setDeviceMode('mobile')">📱 手機速記</button>
+    </div>
+  </div>
+
+  <!-- Dashboard 互鎖狀態 -->
+  <div class="dashboard">
+    <div class="track-row">
+      <div class="track-meta">
+        <span>主線：神經科學 (碩士筆試檢索)</span>
+        <span id="neuro-text">0.0 / 1.0 單位</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div id="neuro-fill" class="progress-bar-fill"></div>
+      </div>
+    </div>
+    <div class="track-row">
+      <div class="track-meta">
+        <span>副線：德文 / 西文 (制衡激勵)</span>
+        <span id="sub-text">0.0 / 0.5 額度</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div id="sub-fill" class="progress-bar-fill"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button id="tab-neuro" class="tab-btn active" onclick="switchSubject('neuro')">🧠 神經科學</button>
+    <button id="tab-german" class="tab-btn" onclick="switchSubject('german')">🇩🇪 德文 (A1)</button>
+    <button id="tab-spanish" class="tab-btn" onclick="switchSubject('spanish')">🇪🇸 西文 (A2)</button>
+  </div>
+
+  <!-- Card Body -->
+  <div class="stage-card">
+    <div id="card-body">
+      <span id="card-badge" class="badge badge-neuro">讀取中</span>
+      <h2 id="card-title" class="card-title">載入中...</h2>
+      <p id="card-prompt" class="card-prompt"></p>
+      
+      <div id="input-container" class="input-area"></div>
+      
+      <div class="action-row">
+        <button class="btn" onclick="submitProgress()">驗收提交 (<span id="reward-unit">+0.0</span>)</button>
+      </div>
+    </div>
+
+    <!-- 互鎖鎖定畫面 -->
+    <div id="lock-overlay" class="lock-overlay" style="display: none;">
+      <h3 style="color: var(--locked-red);">🔒 副線已達 0.5 額度上限</h3>
+      <p style="font-size: 0.9rem; color: #cbd5e1; max-width: 400px;">
+        為了避免逃避核心阻力，請先前往<strong>「神經科學」</strong>完成當日 1.0 單位驗收。達成後全天將解鎖語言無限暢讀模式！
+      </p>
+      <button class="btn" onclick="switchSubject('neuro')">立即前往神經科學 ➔</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
