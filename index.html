@@ -237,80 +237,77 @@
     };
 
     // 題目資料庫（展示用：神經科學交錯題庫 + 德西雙軌）
-    const CONTENT_STORE = {
-    neuro: {
-      desktop: [
-        {
-          id: "neu_d1",
-          track: "神經科學 · 機制推導 (Level 1/2)",
-          title: "動作電位離子動力學與單向傳導機制",
-          prompt: "【電腦端驗收 · 英文論述】\n請說明電壓門控鈉通道（Nav）去活化（Inactivation）與活化（Activation）的差異，並深入解釋絕對不應期與相對不應期如何透過分子機制確保動作電位沿軸突「單向（Unidirectional）」傳導。",
-          unitReward: 0.5,
-          minWords: 15,
-          keywords: ["inactivation", "sodium", "refractory", "h-gate", "unidirectional", "depolarization"],
-          reference: "標準因果鏈：去極化觸發 m-gate 開啟（活化），約 1ms 後胞內 h-gate 快速關閉阻斷離子流（去活化）。此去活化狀態導致絕對不應期，即使強刺激也無法引發動作電位，因此逆向擴散的局部電流無法興奮剛去極化完的軸突膜，確保傳導嚴格單向。"
-        }
-      ],
-      mobile: [
-        {
-          id: "neu_m1",
-          track: "神經科學 · 隨身速記",
-          title: "神經遞質受體分類辨別",
-          prompt: "【手機速記 · 概念快檢】\nNMDA 受體在靜止膜電位下被哪一種二價陽離子阻斷？",
-          unitReward: 0.1,
-          answers: ["mg2+", "鎂", "鎂離子", "magnesium", "mg"]
-        }
-      ]
-    },
-    german: {
-      desktop: [
-        {
-          id: "de_d1",
-          track: "德文 · A1 結構造句",
-          title: "從屬子句 (weil) 與動詞後置",
-          prompt: "【電腦端驗收 · 骨架組裝】\n請將這兩句合併為一個帶有 'weil' 的句子，注意動詞詞序：\n1. Ich lerne heute fleißig Deutsch.\n2. Ich möchte 2027 in Deutschland studieren.",
-          unitReward: 0.2,
-          minWords: 8,
-          keywords: ["weil", "studieren", "möchte"],
-          reference: "Ich lerne heute fleißig Deutsch, weil ich 2027 in Deutschland studieren möchte."
-        }
-      ],
-      mobile: [
-        {
-          id: "de_m1",
-          track: "德文 · A1 格位快問",
-          title: "Akkusativ 定冠詞變位",
-          prompt: "【手機速記 · 填空】\nDer Mann kauft _____ (der) Tisch. (請填入正確冠詞形式)",
-          unitReward: 0.1,
-          answers: ["den"]
-        }
-      ]
-    },
-    spanish: {
-      desktop: [
-        {
-          id: "es_d1",
-          track: "西文 · A2 時態深度辨析",
-          title: "Indefinido 與 Imperfecto 綜合寫作",
-          prompt: "【電腦端驗收 · 段落推導】\n請造一個包含「持續背景（Imperfecto）」與「突發動作（Indefinido）」的複式句。",
-          unitReward: 0.2,
-          minWords: 6,
-          keywords: ["cuando", "mientras"],
-          reference: "Cuando yo dormía, sonó el teléfono."
-        }
-      ],
-      mobile: [
-        {
-          id: "es_m1",
-          track: "西文 · A2 動詞變位快篩",
-          title: "不規則動詞 Indefinido",
-          prompt: "【手機速記】\n動詞 'hacer' 在第三人稱單數 (él/ella) 的 Indefinido 變位是？",
-          unitReward: 0.1,
-          answers: ["hizo"]
-        }
-      ]
-    }
-  };
+   const CONTENT_STORE = {
+      neuro: {
+        desktop: [
+          {
+            id: "neu_d1",
+            track: "神經科學 · 機制推導 (Level 1/2)",
+            title: "動作電位離子動力學與單向傳導機制",
+            prompt: "【電腦端驗收 · 英文論述】\n請說明電壓門控鈉通道（Nav）去活化（Inactivation）與活化（Activation）的差異，並說明絕對不應期與相對不應期如何保證動作電位單向傳導。",
+            unitReward: 0.5,
+            minChars: 15,
+            reference: "去極化使鈉通道活化開啟，隨後 h-gate 快速關閉導致去活化與絕對不應期，阻擋逆向興奮，確保傳導單向。"
+          }
+        ],
+        mobile: [
+          {
+            id: "neu_m1",
+            track: "神經科學 · 隨身速記",
+            title: "神經遞質受體分類辨別",
+            prompt: "【手機速記 · 概念快檢】\nNMDA 受體在靜止膜電位下被哪一種二價陽離子阻斷？",
+            unitReward: 0.1,
+            answers: ["mg2+", "鎂", "鎂離子", "magnesium", "mg"]
+          }
+        ]
+      },
+      german: {
+        desktop: [
+          {
+            id: "de_d1",
+            track: "德文 · A1 結構造句",
+            title: "從屬子句 (weil) 與動詞後置",
+            prompt: "【電腦端驗收 · 骨架組裝】\n請將這兩句合併為一個帶有 'weil' 的句子，注意動詞詞序：\n1. Ich lerne heute fleißig Deutsch.\n2. Ich möchte 2027 in Deutschland studieren.",
+            unitReward: 0.2,
+            minChars: 10,
+            reference: "Ich lerne heute fleißig Deutsch, weil ich 2027 in Deutschland studieren möchte."
+          }
+        ],
+        mobile: [
+          {
+            id: "de_m1",
+            track: "德文 · A1 格位快問",
+            title: "Akkusativ 定冠詞變位",
+            prompt: "【手機速記 · 填空】\nDer Mann kauft _____ (der) Tisch. (請填入正確冠詞形式)",
+            unitReward: 0.1,
+            answers: ["den"]
+          }
+        ]
+      },
+      spanish: {
+        desktop: [
+          {
+            id: "es_d1",
+            track: "西文 · A2 時態深度辨析",
+            title: "Indefinido 與 Imperfecto 綜合寫作",
+            prompt: "【電腦端驗收 · 段落推導】\n請造一個包含「持續背景（Imperfecto）」與「突發動作（Indefinido）」的複式句。",
+            unitReward: 0.2,
+            minChars: 10,
+            reference: "Cuando yo dormía, sonó el teléfono."
+          }
+        ],
+        mobile: [
+          {
+            id: "es_m1",
+            track: "西文 · A2 動詞變位快篩",
+            title: "不規則動詞 Indefinido",
+            prompt: "【手機速記】\n動詞 'hacer' 在第三人稱單數 (él/ella) 的 Indefinido 變位是？",
+            unitReward: 0.1,
+            answers: ["hizo"]
+          }
+        ]
+      }
+    };
 
     // 應用程式全域狀態
     let currentUser = null;
