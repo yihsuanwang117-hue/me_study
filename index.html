@@ -46,7 +46,7 @@
       border-radius: 12px;
       border: 1px solid var(--border);
     }
-    .user-info { font-size: 0.85rem; color: var(--text-muted); }
+    .user-info { font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; }
     .sync-status { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; margin-right: 6px; }
 
     /* Dashboard: 進度與互鎖指示 */
@@ -80,19 +80,18 @@
     .progress-bar-fill {
       height: 100%;
       width: 0%;
-      transition: width 0.3s ease;
+      transition: width 0.3s ease, background 0.3s ease;
     }
 
     /* Mode Selector (Device Context) */
     .device-switcher {
       display: flex;
-      background: var(--card-bg);
+      background: #0f172a;
       border-radius: 10px;
       padding: 4px;
       border: 1px solid var(--border);
     }
     .device-btn {
-      flex: 1;
       padding: 8px 12px;
       border: none;
       background: transparent;
@@ -101,6 +100,7 @@
       cursor: pointer;
       font-weight: 600;
       font-size: 0.85rem;
+      transition: all 0.2s;
     }
     .device-btn.active {
       background: var(--border);
@@ -173,7 +173,7 @@
       font-size: 0.95rem;
       font-family: inherit;
     }
-    textarea { height: 110px; resize: none; }
+    textarea { height: 110px; resize: vertical; }
 
     .action-row {
       display: flex;
@@ -206,6 +206,7 @@
       padding: 24px;
       text-align: center;
       gap: 12px;
+      z-index: 10;
     }
   </style>
 
@@ -215,29 +216,28 @@
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
     import { getFirestore, doc, onSnapshot, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
-    // 1. 請替換為您的 Firebase 專案設定
+    // Firebase 專案設定
     const firebaseConfig = {
       apiKey: "AIzaSyC3A8sd0lc18X8Hulo37q0rQA4iLV1GzOE",
-    authDomain: "me-study-2fa07.firebaseapp.com",
-    projectId: "me-study-2fa07",
-    storageBucket: "me-study-2fa07.firebasestorage.app",
-    messagingSenderId: "326324849702",
-    appId: "1:326324849702:web:902b0da79bfb0433176ae7",
-    measurementId: "G-HZQGG8SX3W"
+      authDomain: "me-study-2fa07.firebaseapp.com",
+      projectId: "me-study-2fa07",
+      storageBucket: "me-study-2fa07.firebasestorage.app",
+      messagingSenderId: "326324849702",
+      appId: "1:326324849702:web:902b0da79bfb0433176ae7",
+      measurementId: "G-HZQGG8SX3W"
     };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // 取得台北標準時間 YYYY-MM-DD
     const getTaipeiDate = () => {
       const now = new Date();
       return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei' }).format(now);
     };
 
-    // 題目資料庫（展示用：神經科學交錯題庫 + 德西雙軌）
-   const CONTENT_STORE = {
+    // 完整題庫設計
+    const CONTENT_STORE = {
       neuro: {
         desktop: [
           {
@@ -309,45 +309,43 @@
       }
     };
 
-    // 應用程式全域狀態
+    // 應用狀態
     let currentUser = null;
     let todayDate = getTaipeiDate();
     let currentSubject = "neuro";
-    let currentDeviceMode = "desktop"; // 'mobile' | 'desktop'
+    let currentDeviceMode = "desktop";
     let dailyData = {
       neuro: 0,
       german: 0,
       spanish: 0
     };
 
-    // UI 元件
+    // UI 元件參照
     const authStatusEl = document.getElementById("auth-status");
     const neuroFillEl = document.getElementById("neuro-fill");
     const neuroTextEl = document.getElementById("neuro-text");
     const subFillEl = document.getElementById("sub-fill");
     const subTextEl = document.getElementById("sub-text");
     const lockOverlayEl = document.getElementById("lock-overlay");
-    const cardContainerEl = document.getElementById("card-body");
 
-    // 2. 身份驗證初始化（自動匿名登入以同步狀態）
+    // 身份驗證初始化
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         currentUser = user;
-        authStatusEl.textContent = `同步中 ID: ${user.uid.slice(0, 6)}...`;
+        authStatusEl.textContent = `已即時同步 (ID: ${user.uid.slice(0, 6)})`;
         listenToDailyLog(user.uid);
       } else {
         await signInAnonymously(auth);
       }
     });
 
-    // 3. 即時監聽當日進度與互鎖狀態
+    // 監聽當日紀錄
     function listenToDailyLog(uid) {
       const docRef = doc(db, `users/${uid}/daily_logs/${todayDate}`);
       onSnapshot(docRef, (docSnap) => {
         if (docSnap.exists()) {
           dailyData = docSnap.data();
         } else {
-          // 初始化今日文檔
           setDoc(docRef, { neuro: 0, german: 0, spanish: 0 });
         }
         renderDashboard();
@@ -355,24 +353,23 @@
       });
     }
 
-    // 4. 儀表板與解鎖狀態判定
+    // 儀表板計算
     function renderDashboard() {
       const neuroUnits = dailyData.neuro || 0;
       const subUnits = (dailyData.german || 0) + (dailyData.spanish || 0);
 
-      // 神經科學 (主線：1.0 達標)
+      // 主線計算
       const neuroPct = Math.min((neuroUnits / 1.0) * 100, 100);
       neuroFillEl.style.width = `${neuroPct}%`;
       neuroFillEl.style.background = "var(--accent-neuro)";
       neuroTextEl.textContent = `${neuroUnits.toFixed(1)} / 1.0 單位 ${neuroUnits >= 1.0 ? '✓ 達標' : ''}`;
 
-      // 副線語言 (門檻：0.5 額度制衡)
+      // 副線互鎖計算
       const isNeuroComplete = neuroUnits >= 1.0;
       const subPct = isNeuroComplete ? 100 : Math.min((subUnits / 0.5) * 100, 100);
       subFillEl.style.width = `${subPct}%`;
       
       if (!isNeuroComplete && subUnits >= 0.5) {
-        // 觸發互鎖：副線用完，主線未滿
         subFillEl.style.background = "var(--locked-red)";
         subTextEl.textContent = `${subUnits.toFixed(1)} / 0.5 (已達上限 · 鎖定中 🔒)`;
         document.getElementById("tab-german").classList.add("locked");
@@ -385,71 +382,67 @@
       }
     }
 
-    // 5. 渲染當前學習卡片
-  // 5. 渲染當前學習卡片（加入防呆與結構相容）
+    // 渲染卡片核心
     window.renderCard = function() {
       const neuroUnits = dailyData.neuro || 0;
       const subUnits = (dailyData.german || 0) + (dailyData.spanish || 0);
       const isSubLocked = (neuroUnits < 1.0) && (subUnits >= 0.5);
       
-      // 若副線被鎖定且使用者停留在副線
       if (isSubLocked && (currentSubject === "german" || currentSubject === "spanish")) {
         lockOverlayEl.style.display = "flex";
         return;
       }
       lockOverlayEl.style.display = "none";
 
-      // 安全取得題目列表（相容單層陣列或雙層物件結構）
-      let rawSubject = CONTENT_STORE[currentSubject];
-      let list = [];
-      if (Array.isArray(rawSubject)) {
-        list = rawSubject;
-      } else if (rawSubject && typeof rawSubject === "object") {
-        list = rawSubject[currentDeviceMode] || rawSubject.desktop || rawSubject.mobile || [];
-      }
+      const subjectPool = CONTENT_STORE[currentSubject] || {};
+      const list = subjectPool[currentDeviceMode] || [];
 
-      // 若完全找不到題目，顯示提示防呆，不讓程式崩潰
-      if (!list || list.length === 0 || !list[0]) {
+      if (!list || list.length === 0) {
         document.getElementById("card-badge").textContent = "無題目";
-        document.getElementById("card-title").textContent = "此學科目前無可用題目";
-        document.getElementById("card-prompt").textContent = "請確認 CONTENT_STORE 題庫設定。";
+        document.getElementById("card-title").textContent = "此模式目前無可用題目";
+        document.getElementById("card-prompt").textContent = "請切換模式或學科。";
         document.getElementById("reward-unit").textContent = "+0.0";
         return;
       }
 
-      // 取出當前題目
       const item = list[0];
 
-      document.getElementById("card-badge").textContent = item.track || "核心進度";
+      document.getElementById("card-badge").textContent = item.track || "學習進度";
       document.getElementById("card-badge").className = `badge badge-${currentSubject}`;
       document.getElementById("card-title").textContent = item.title || "";
       document.getElementById("card-prompt").textContent = item.prompt || "";
       
       const inputContainer = document.getElementById("input-container");
-      inputContainer.innerHTML = (item.mode === "desktop" || !item.mode)
-        ? `<textarea id="user-ans" placeholder="【電腦驗收】請在此輸入機制因果推導或論述..."></textarea>`
-        : `<input type="text" id="user-ans" placeholder="【手機速記】請在此輸入答案..." autocomplete="off">`;
+      if (currentDeviceMode === "desktop") {
+        inputContainer.innerHTML = `<textarea id="user-ans" placeholder="【💻 電腦深研】請詳細輸入機制推導、因果鏈論述或完整句子（需滿 ${item.minChars || 15} 字）..."></textarea>`;
+      } else {
+        inputContainer.innerHTML = `<input type="text" id="user-ans" placeholder="【📱 手機速記】請在此輸入答案或簡答..." autocomplete="off">`;
+      }
 
-      document.getElementById("reward-unit").textContent = `+${item.unitReward || 0.1}`;
+      document.getElementById("reward-unit").textContent = `+${item.unitReward}`;
     };
 
-  // 6. 提交作答（含驗收與防呆檢驗）
+    // 提交驗收邏輯
     window.submitProgress = async function() {
-      const list = CONTENT_STORE[currentSubject];
-      const item = list[0];
-      const userAns = document.getElementById("user-ans").value.trim();
+      const inputEl = document.getElementById("user-ans");
+      if (!inputEl) return;
+      const userAns = inputEl.value.trim();
 
-      // 1. 空值防呆檢驗
+      // 空白防呆
       if (!userAns) {
-        alert("⚠️ 請先輸入回答內容後再提交驗收！");
+        alert("⚠️ 請先在輸入框填寫回答內容！");
         return;
       }
 
+      const subjectPool = CONTENT_STORE[currentSubject] || {};
+      const list = subjectPool[currentDeviceMode] || [];
+      if (!list || list.length === 0) return;
+      const item = list[0];
+
       let isPassed = false;
 
-      // 2. 依模式進行檢驗
-      if (item.mode === "mobile") {
-        // 手機端：比對特定答案
+      // 分流驗收
+      if (currentDeviceMode === "mobile") {
         const cleanAns = userAns.toLowerCase();
         const validAnswers = (item.answers || []).map(a => a.toLowerCase());
         
@@ -457,16 +450,13 @@
           isPassed = true;
           alert(`🎉 回答正確！獲得 +${item.unitReward} 單位進度。`);
         } else {
-          alert(`❌ 答案有誤。\n您的回答：${userAns}\n參考正解：${item.answers ? item.answers[0] : "無"}`);
+          alert(`❌ 答案有誤。\n您的回答：${userAns}\n參考正解：${item.answers ? item.answers[0] : "請重新確認"}`);
           return;
         }
       } else {
-        // 電腦端：論述字數與核心關鍵字檢驗
-        const text = userAns.toLowerCase();
-        const matchedKeys = (item.keywords || []).filter(k => text.includes(k.toLowerCase()));
-        
-        if (userAns.length < (item.minWords || 10)) {
-          alert(`⚠️ 論述內容過短（請至少輸入 ${item.minWords || 10} 個字元以上）。`);
+        const minLen = item.minChars || 15;
+        if (userAns.length < minLen) {
+          alert(`⚠️ 論述內容過短（目前已輸入 ${userAns.length} 字，電腦驗收需至少 ${minLen} 字）。\n請進一步補充因果機制！`);
           return;
         }
 
@@ -474,35 +464,45 @@
         const feedback = item.reference 
           ? `\n\n【標準因果機制對照】：\n${item.reference}` 
           : "";
-        alert(`✅ 已完成推導驗收！\n檢索命中核心標籤數：${matchedKeys.length} / ${(item.keywords || []).length}${feedback}`);
+        alert(`✅ 電腦深研驗收通過！獲得 +${item.unitReward} 單位進度。${feedback}`);
       }
 
-      // 3. 通過驗收後才增加進度與存檔
+      // 累加並寫入 Firestore
       if (isPassed) {
         const unit = item.unitReward;
 
         if (currentUser) {
-          const docRef = doc(db, `users/${currentUser.uid}/daily_logs/${todayDate}`);
-          await updateDoc(docRef, {
-            [currentSubject]: increment(unit)
-          });
+          try {
+            const docRef = doc(db, `users/${currentUser.uid}/daily_logs/${todayDate}`);
+            await updateDoc(docRef, {
+              [currentSubject]: increment(unit)
+            });
+          } catch (e) {
+            console.error("更新 Firestore 失敗：", e);
+            alert("寫入雲端失敗，請確認 Firestore 權限。");
+          }
         }
 
-        document.getElementById("user-ans").value = "";
+        inputEl.value = "";
       }
     };
-    // 切換學科與裝置模式
+
+    // 分頁切換
     window.switchSubject = (sub) => {
       currentSubject = sub;
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-      document.getElementById(`tab-${sub}`).classList.add("active");
-      renderCard();
+      const btn = document.getElementById(`tab-${sub}`);
+      if (btn) btn.classList.add("active");
+      window.renderCard();
     };
 
+    // 裝置模式切換（觸發重繪）
     window.setDeviceMode = (mode) => {
       currentDeviceMode = mode;
       document.querySelectorAll(".device-btn").forEach(b => b.classList.remove("active"));
-      document.getElementById(`mode-${mode}`).classList.add("active");
+      const btn = document.getElementById(`mode-${mode}`);
+      if (btn) btn.classList.add("active");
+      window.renderCard();
     };
   </script>
 </head>
