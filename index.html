@@ -36,7 +36,7 @@
       gap: 16px;
     }
 
-    /* Auth & Sync Header */
+    /* Auth & Top Bar */
     .top-bar {
       display: flex;
       justify-content: space-between;
@@ -48,6 +48,100 @@
     }
     .user-info { font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; }
     .sync-status { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; margin-right: 6px; }
+
+    .top-actions { display: flex; gap: 8px; align-items: center; }
+    .action-btn {
+      background: #334155;
+      color: #fff;
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .action-btn:hover { background: #475569; }
+
+    /* Mode Switcher */
+    .device-switcher {
+      display: flex;
+      background: #0f172a;
+      border-radius: 10px;
+      padding: 4px;
+      border: 1px solid var(--border);
+    }
+    .device-btn {
+      padding: 6px 12px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.8rem;
+      transition: all 0.2s;
+    }
+    .device-btn.active {
+      background: var(--border);
+      color: var(--text);
+    }
+
+    /* Learning Map Panel (可收折) */
+    .map-panel {
+      background: #172554;
+      border: 1px solid #1e40af;
+      border-radius: 12px;
+      padding: 16px;
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .map-panel.show { display: flex; }
+    .map-header { display: flex; justify-content: space-between; align-items: center; }
+    .map-header h3 { font-size: 0.95rem; color: #93c5fd; }
+    .book-card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid #1e3a8a;
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .book-title { font-size: 0.9rem; font-weight: bold; color: #fff; }
+    .book-version { font-size: 0.75rem; color: #93c5fd; }
+    .chapter-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+    .chapter-badge {
+      font-size: 0.75rem;
+      background: #1e293b;
+      border: 1px solid #334155;
+      padding: 2px 8px;
+      border-radius: 4px;
+      color: #cbd5e1;
+    }
+
+    /* Import Section */
+    .import-box {
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border-top: 1px solid #1e3a8a;
+      padding-top: 10px;
+    }
+    .import-box textarea {
+      width: 100%;
+      height: 80px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      color: #fff;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      padding: 8px;
+      font-family: monospace;
+      resize: vertical;
+    }
 
     /* Dashboard */
     .dashboard {
@@ -74,31 +168,7 @@
       transition: width 0.3s ease, background 0.3s ease;
     }
 
-    /* Mode Selector */
-    .device-switcher {
-      display: flex;
-      background: #0f172a;
-      border-radius: 10px;
-      padding: 4px;
-      border: 1px solid var(--border);
-    }
-    .device-btn {
-      padding: 8px 12px;
-      border: none;
-      background: transparent;
-      color: var(--text-muted);
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 0.85rem;
-      transition: all 0.2s;
-    }
-    .device-btn.active {
-      background: var(--border);
-      color: var(--text);
-    }
-
-    /* Subject Tabs */
+    /* Tabs */
     .tabs { display: flex; gap: 8px; }
     .tab-btn {
       flex: 1;
@@ -114,7 +184,7 @@
     .tab-btn.active { color: var(--text); border-color: var(--accent-neuro); }
     .tab-btn.locked { border-color: var(--locked-red); color: var(--locked-red); opacity: 0.7; }
 
-    /* Learning Card Core */
+    /* Card Core */
     .stage-card {
       background: var(--card-bg);
       border-radius: 16px;
@@ -139,11 +209,12 @@
     .badge-german { background: rgba(245, 158, 11, 0.2); color: var(--accent-german); }
     .badge-spanish { background: rgba(16, 185, 129, 0.2); color: var(--accent-spanish); }
 
-    .card-title { font-size: 1.15rem; margin-bottom: 8px; }
+    .card-title { font-size: 1.15rem; margin-bottom: 6px; }
+    .card-source-tag { font-size: 0.75rem; color: #38bdf8; margin-bottom: 8px; font-weight: 500; }
     .card-meta-info { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; }
     .card-prompt { font-size: 0.95rem; color: #cbd5e1; margin-bottom: 16px; white-space: pre-line; line-height: 1.6; }
 
-    /* Answer Area */
+    /* Inputs */
     .input-area { margin-bottom: 16px; }
     textarea, input[type="text"] {
       width: 100%;
@@ -192,7 +263,7 @@
     }
   </style>
 
-  <!-- Firebase Scripts (Modular CDN v10) -->
+  <!-- Firebase Modular CDN -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
@@ -216,154 +287,117 @@
       return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei' }).format(new Date());
     };
 
-    // ==========================================
-    // 嚴謹校訂之專業多題庫
-    // ==========================================
-    const CONTENT_STORE = {
-      neuro: {
-        desktop: [
-          {
-            id: "neu_d1",
-            track: "神經科學 · 機制推導 (Level 1/2)",
-            title: "動作電位離子動力學與單向傳導機制",
-            prompt: "【電腦端驗收 · 英文論述】\n請說明電壓門控鈉通道（Nav）去活化（Inactivation）與活化（Activation）的差異，並深入解釋絕對不應期與相對不應期如何透過分子機制確保動作電位沿軸突「單向（Unidirectional）」傳導。",
-            unitReward: 0.5,
-            minChars: 15,
-            reference: "標準機制：膜去極化引起 m-gate 開啟（活化），約 1ms 內胞內側 h-gate (ball-and-chain 胜肽) 快速閉合堵塞孔道（去活化）。此去活化狀態導致絕對不應期，即使高強度刺激也無法再次引發動作電位；逆向擴散的局部微電流無法興奮剛去極化過的軸突膜，確保興奮嚴格單向向前傳導。"
-          },
-          {
-            id: "neu_d2",
-            track: "神經科學 · 突觸機制 (Level 2/3)",
-            title: "突觸小泡融合與鈣離子感測",
-            prompt: "【電腦端驗收 · 因果鏈分析】\n請簡述動作電位到達軸突末梢後，促使神經遞質釋放的完整分子因果鏈（需包含電壓門控鈣通道、SNARE 複合體三種蛋白與 Synaptotagmin-1 的角色）。",
-            unitReward: 0.5,
-            minChars: 15,
-            reference: "因果鏈：動作電位去極化突觸前膜 -> 活化電壓門控 Ca2+ 通道使 Ca2+ 內流 -> Ca2+ 結合至突觸小泡膜上的 Synaptotagmin-1 -> 驅動核心 SNARE 複合體（Synaptobrevin, Syntaxin-1, SNAP-25）捲曲拉緊 -> 克服靜電斥力完成小泡膜與突觸前膜融合（Pore opening）釋放遞質。"
-          }
-        ],
-        mobile: [
-          {
-            id: "neu_m1",
-            track: "神經科學 · 隨身速記",
-            title: "NMDA 受體電壓依賴性阻斷",
-            prompt: "【手機速記 · 離子檢索】\nNMDA 受體在神經元處於靜止膜電位時，會被細胞外的哪一種二價陽離子物理性阻斷通道孔？",
-            unitReward: 0.1,
-            answers: ["mg2+", "鎂", "鎂離子", "magnesium", "mg"]
-          },
-          {
-            id: "neu_m2",
-            track: "神經科學 · 隨身速記",
-            title: "離子平衡電位 (Nernst 方程)",
-            prompt: "【手機速記 · 生物物理】\n正常生理狀態下，神經元細胞內濃度遠高於細胞外、且平衡電位約在 -70 mV 至 -90 mV 的主要陽離子是？",
-            unitReward: 0.1,
-            answers: ["k+", "鉀", "鉀離子", "potassium", "k"]
-          },
-          {
-            id: "neu_m3",
-            track: "神經科學 · 實驗統計",
-            title: "雙組均值檢驗",
-            prompt: "【手機速記 · 統計工具】\n欲檢驗藥物組與對照組小鼠在水迷宮停留時間的平均值是否有顯著差異（數據符合常態性與方差同質性），應使用何種統計檢驗？",
-            unitReward: 0.1,
-            answers: ["t-test", "student's t-test", "t檢定", "雙樣本t檢定", "獨立樣本t檢定"]
-          }
-        ]
-      },
-      german: {
-        desktop: [
-          {
-            id: "de_d1",
-            track: "德文 · A1 結構造句",
-            title: "從屬子句 (weil) 與動詞後置",
-            prompt: "【電腦端驗收 · 骨架組裝】\n請將這兩句合併為一個帶有 'weil' 的句子，注意動詞詞序：\n1. Ich lerne heute fleißig Deutsch.\n2. Ich möchte 2027 in Deutschland studieren.",
-            unitReward: 0.2,
-            minChars: 10,
-            reference: "Ich lerne heute fleißig Deutsch, weil ich 2027 in Deutschland studieren möchte."
-          },
-          {
-            id: "de_d2",
-            track: "德文 · A2 介系詞與格位",
-            title: "二位介系詞 (Wechselpräpositionen)",
-            prompt: "【電腦端驗收 · 語境判斷】\n請用 'stellen' (放/立) 或 'stehen' (處於) 造一個句子，說明「我把書放在桌子上（動態/Akkusativ）」或「書在桌上（靜態/Dativ）」。",
-            unitReward: 0.2,
-            minChars: 8,
-            reference: "動態：Ich stelle das Buch auf den Tisch. / 靜態：Das Buch steht auf dem Tisch."
-          }
-        ],
-        mobile: [
-          {
-            id: "de_m1",
-            track: "德文 · A1 格位快問",
-            title: "Akkusativ 陽性冠詞",
-            prompt: "【手機速記 · 填空】\nDer Mann kauft _____ (der) Tisch. (請填入正確的定冠詞形式)",
-            unitReward: 0.1,
-            answers: ["den"]
-          },
-          {
-            id: "de_m2",
-            track: "德文 · 名詞性別記憶",
-            title: "der / die / das 快速辨識",
-            prompt: "【手機速記】\n德文單字 'Gehirn'（大腦）的正確定冠詞是？",
-            unitReward: 0.1,
-            answers: ["das"]
-          },
-          {
-            id: "de_m3",
-            track: "德文 · 介系詞支配",
-            title: "支配 Dativ 介系詞",
-            prompt: "【手機速記 · 填空】\nIch fahre mit _____ (das) Fahrrad zur Universität. (請填入正確冠詞形式)",
-            unitReward: 0.1,
-            answers: ["dem"]
-          }
-        ]
-      },
-      spanish: {
-        desktop: [
-          {
-            id: "es_d1",
-            track: "西文 · A2 時態深度辨析",
-            title: "Indefinido 與 Imperfecto 綜合寫作",
-            prompt: "【電腦端驗收 · 段落推導】\n請造一個包含「持續背景（Imperfecto）」與「突發動作（Indefinido）」的複式句（至少包含 cuando 或 mientras）。",
-            unitReward: 0.2,
-            minChars: 8,
-            reference: "Cuando yo dormía, sonó el teléfono. / Mientras estudiábamos, empezó a llover."
-          }
-        ],
-        mobile: [
-          {
-            id: "es_m1",
-            track: "西文 · A2 動詞變位快篩",
-            title: "不規則動詞 Indefinido",
-            prompt: "【手機速記】\n動詞 'hacer' 在第三人稱單數 (él/ella/usted) 的 Pretérito Indefinido 變位是？",
-            unitReward: 0.1,
-            answers: ["hizo"]
-          },
-          {
-            id: "es_m2",
-            track: "西文 · A2 動詞變位快篩",
-            title: "動詞 ir / ser 過去時",
-            prompt: "【手機速記】\n動詞 'ir'（去）在第一人稱單數 (yo) 的 Pretérito Indefinido 變位是？",
-            unitReward: 0.1,
-            answers: ["fui"]
-          },
-          {
-            id: "es_m3",
-            track: "西文 · 前置詞用法",
-            title: "個人前置詞 a",
-            prompt: "【手機速記 · 填空】\nVeo _____ Juan todos los días en la biblioteca. (指代具體人物受詞需填入的前置詞是？)",
-            unitReward: 0.1,
-            answers: ["a"]
-          }
-        ]
+    // 預設核心題庫與學習地圖資料
+    let CURRICULUM_DATA = {
+      books: [
+        {
+          id: "kandel_pns",
+          title: "Principles of Neural Science",
+          version: "6th Edition (Kandel et al.)",
+          subject: "neuro",
+          chapters: ["Chapter 6: Ion Channels", "Chapter 12: Synaptic Integration"]
+        },
+        {
+          id: "deutsch_schritte",
+          title: "Schritte Plus Neu & Grammatik",
+          version: "A1-A2 Hueber",
+          subject: "german",
+          chapters: ["A1.1: Akkusativ & 定冠詞", "A2.1: Nebensatz mit weil"]
+        }
+      ],
+      questions: {
+        neuro: {
+          desktop: [
+            {
+              id: "neu_d1",
+              bookRef: "Principles of Neural Science (6th Ed.) · Ch.6",
+              track: "神經科學 · 機制推導",
+              title: "動作電位離子動力學與單向傳導機制",
+              prompt: "【電腦端驗收 · 英文論述】\n請說明電壓門控鈉通道（Nav）去活化（Inactivation）與活化（Activation）的差異，並深入解釋絕對不應期與相對不應期如何透過分子機制確保動作電位沿軸突「單向（Unidirectional）」傳導。",
+              unitReward: 0.5,
+              minChars: 15,
+              reference: "標準機制：膜去極化引起 m-gate 開啟（活化），約 1ms 內胞內側 h-gate (ball-and-chain 胜肽) 快速閉合堵塞孔道（去活化）。此去活化狀態導致絕對不應期，即使高強度刺激也無法再次引發動作電位；逆向擴散的局部微電流無法興奮剛去極化過的軸突膜，確保興奮嚴格單向向前傳導。"
+            }
+          ],
+          mobile: [
+            {
+              id: "neu_m1",
+              bookRef: "Principles of Neural Science (6th Ed.) · Ch.12",
+              track: "神經科學 · 隨身速記",
+              title: "NMDA 受體電壓依賴性阻斷",
+              prompt: "【手機速記 · 離子檢索】\nNMDA 受體在神經元處於靜止膜電位時，會被細胞外的哪一種二價陽離子物理性阻斷通道孔？",
+              unitReward: 0.1,
+              answers: ["mg2+", "鎂", "鎂離子", "magnesium", "mg"]
+            },
+            {
+              id: "neu_m2",
+              bookRef: "Principles of Neural Science (6th Ed.) · Ch.6",
+              track: "神經科學 · 隨身速記",
+              title: "離子平衡電位 (Nernst 方程)",
+              prompt: "【手機速記 · 生物物理】\n正常生理狀態下，神經元細胞內濃度遠高於細胞外、且平衡電位約在 -70 mV 至 -90 mV 的主要陽離子是？",
+              unitReward: 0.1,
+              answers: ["k+", "鉀", "鉀離子", "potassium", "k"]
+            }
+          ]
+        },
+        german: {
+          desktop: [
+            {
+              id: "de_d1",
+              bookRef: "Schritte Plus Neu A2.1",
+              track: "德文 · A1 結構造句",
+              title: "從屬子句 (weil) 與動詞後置",
+              prompt: "【電腦端驗收 · 骨架組裝】\n請將這兩句合併為一個帶有 'weil' 的句子，注意動詞詞序：\n1. Ich lerne heute fleißig Deutsch.\n2. Ich möchte 2027 in Deutschland studieren.",
+              unitReward: 0.2,
+              minChars: 10,
+              reference: "Ich lerne heute fleißig Deutsch, weil ich 2027 in Deutschland studieren möchte."
+            }
+          ],
+          mobile: [
+            {
+              id: "de_m1",
+              bookRef: "Schritte Plus Neu A1.1",
+              track: "德文 · A1 格位快問",
+              title: "Akkusativ 陽性冠詞",
+              prompt: "【手機速記 · 填空】\nDer Mann kauft _____ (der) Tisch. (請填入正確的定冠詞形式)",
+              unitReward: 0.1,
+              answers: ["den"]
+            }
+          ]
+        },
+        spanish: {
+          desktop: [
+            {
+              id: "es_d1",
+              bookRef: "Gramática de uso del español A2",
+              track: "西文 · A2 時態深度辨析",
+              title: "Indefinido 與 Imperfecto 綜合寫作",
+              prompt: "【電腦端驗收 · 段落推導】\n請造一個包含「持續背景（Imperfecto）」與「突發動作（Indefinido）」的複式句（至少包含 cuando 或 mientras）。",
+              unitReward: 0.2,
+              minChars: 8,
+              reference: "Cuando yo dormía, sonó el teléfono. / Mientras estudiábamos, empezó a llover."
+            }
+          ],
+          mobile: [
+            {
+              id: "es_m1",
+              bookRef: "Gramática de uso del español A2",
+              track: "西文 · A2 動詞變位快篩",
+              title: "不規則動詞 Indefinido",
+              prompt: "【手機速記】\n動詞 'hacer' 在第三人稱單數 (él/ella/usted) 的 Pretérito Indefinido 變位是？",
+              unitReward: 0.1,
+              answers: ["hizo"]
+            }
+          ]
+        }
       }
     };
 
-    // 應用狀態
     let currentUser = null;
     let todayDate = getTaipeiDate();
     let currentSubject = "neuro";
     let currentDeviceMode = "desktop";
     
-    // 各科各模式的題目索引指針
     let cardPointers = {
       neuro: { desktop: 0, mobile: 0 },
       german: { desktop: 0, mobile: 0 },
@@ -374,7 +408,7 @@
       neuro: 0,
       german: 0,
       spanish: 0,
-      completedCardIds: [] // 記錄今日已計分的題目 ID
+      completedCardIds: []
     };
 
     // DOM 元素
@@ -384,17 +418,21 @@
     const subFillEl = document.getElementById("sub-fill");
     const subTextEl = document.getElementById("sub-text");
     const lockOverlayEl = document.getElementById("lock-overlay");
+    const mapPanelEl = document.getElementById("map-panel");
+    const bookListEl = document.getElementById("book-list");
 
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         currentUser = user;
         authStatusEl.textContent = `已同步 (ID: ${user.uid.slice(0, 6)})`;
         listenToDailyLog(user.uid);
+        listenToCustomCurriculum(user.uid);
       } else {
         await signInAnonymously(auth);
       }
     });
 
+    // 監聽當日進度
     function listenToDailyLog(uid) {
       const docRef = doc(db, `users/${uid}/daily_logs/${todayDate}`);
       onSnapshot(docRef, (docSnap) => {
@@ -412,17 +450,49 @@
       });
     }
 
+    // 監聽使用者專屬的教材/題庫
+    function listenToCustomCurriculum(uid) {
+      const docRef = doc(db, `users/${uid}/meta/curriculum`);
+      onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+          const custom = docSnap.data();
+          if (custom.books) CURRICULUM_DATA.books = custom.books;
+          if (custom.questions) CURRICULUM_DATA.questions = custom.questions;
+        }
+        renderLearningMap();
+        renderCard();
+      });
+    }
+
+    // 渲染學習地圖（書名、版本、章節清單）
+    function renderLearningMap() {
+      bookListEl.innerHTML = "";
+      CURRICULUM_DATA.books.forEach(b => {
+        const card = document.createElement("div");
+        card.className = "book-card";
+        
+        let tagsHtml = (b.chapters || []).map(ch => `<span class="chapter-badge">✓ ${ch}</span>`).join("");
+        
+        card.innerHTML = `
+          <div class="book-title">📖 ${b.title}</div>
+          <div class="book-version">版本：${b.version} (${b.subject.toUpperCase()})</div>
+          <div class="chapter-tags">${tagsHtml}</div>
+        `;
+        bookListEl.appendChild(card);
+      });
+    }
+
     function renderDashboard() {
       const neuroUnits = dailyData.neuro || 0;
       const subUnits = (dailyData.german || 0) + (dailyData.spanish || 0);
 
-      // 主線 1.0 單位達標判定
+      // 主線 1.0 達標
       const neuroPct = Math.min((neuroUnits / 1.0) * 100, 100);
       neuroFillEl.style.width = `${neuroPct}%`;
       neuroFillEl.style.background = "var(--accent-neuro)";
       neuroTextEl.textContent = `${neuroUnits.toFixed(1)} / 1.0 單位 ${neuroUnits >= 1.0 ? '✓ 達標' : ''}`;
 
-      // 副線 0.5 額度互鎖
+      // 副線 0.5 門檻
       const isNeuroComplete = neuroUnits >= 1.0;
       const subPct = isNeuroComplete ? 100 : Math.min((subUnits / 0.5) * 100, 100);
       subFillEl.style.width = `${subPct}%`;
@@ -440,7 +510,7 @@
       }
     }
 
-    // 渲染卡片核心：動態支援換題與今日驗收狀態提示
+    // 渲染卡片核心
     window.renderCard = function() {
       const neuroUnits = dailyData.neuro || 0;
       const subUnits = (dailyData.german || 0) + (dailyData.spanish || 0);
@@ -452,29 +522,27 @@
       }
       lockOverlayEl.style.display = "none";
 
-      const subjectPool = CONTENT_STORE[currentSubject] || {};
+      const subjectPool = CURRICULUM_DATA.questions[currentSubject] || {};
       const list = subjectPool[currentDeviceMode] || [];
 
       if (!list || list.length === 0) {
         document.getElementById("card-badge").textContent = "無題目";
-        document.getElementById("card-title").textContent = "此模式目前無題目";
-        document.getElementById("card-prompt").textContent = "請切換模式或學科。";
+        document.getElementById("card-title").textContent = "此模式目前無可用題目";
+        document.getElementById("card-source").textContent = "";
+        document.getElementById("card-prompt").textContent = "請透過上方「學習地圖」匯入新章節題目。";
         document.getElementById("reward-unit").textContent = "+0.0";
         return;
       }
 
-      // 依當前指針取題（循環切換）
       const pointer = cardPointers[currentSubject][currentDeviceMode] % list.length;
       const item = list[pointer];
-
       const isCompletedToday = (dailyData.completedCardIds || []).includes(item.id);
 
       document.getElementById("card-badge").textContent = item.track || "學習進度";
       document.getElementById("card-badge").className = `badge badge-${currentSubject}`;
+      document.getElementById("card-source").textContent = item.bookRef ? `📚 來源教材：${item.bookRef}` : "";
       document.getElementById("card-title").textContent = item.title;
-      
-      // 顯示題號進度與今日計分狀態
-      document.getElementById("card-meta").textContent = `題目 ${pointer + 1} / ${list.length} ${isCompletedToday ? '· (今日已驗收，重複練習不重複計分)' : ''}`;
+      document.getElementById("card-meta").textContent = `題目 ${pointer + 1} / ${list.length} ${isCompletedToday ? '· (今日已驗收，不重複累加)' : ''}`;
       document.getElementById("card-prompt").textContent = item.prompt;
       
       const inputContainer = document.getElementById("input-container");
@@ -487,7 +555,7 @@
       document.getElementById("reward-unit").textContent = isCompletedToday ? "+0.0 (已累計)" : `+${item.unitReward}`;
     };
 
-    // 提交驗收邏輯
+    // 提交驗收
     window.submitProgress = async function() {
       const inputEl = document.getElementById("user-ans");
       if (!inputEl) return;
@@ -498,7 +566,7 @@
         return;
       }
 
-      const subjectPool = CONTENT_STORE[currentSubject] || {};
+      const subjectPool = CURRICULUM_DATA.questions[currentSubject] || {};
       const list = subjectPool[currentDeviceMode] || [];
       if (!list || list.length === 0) return;
       
@@ -507,7 +575,6 @@
 
       let isPassed = false;
 
-      // 模式驗證
       if (currentDeviceMode === "mobile") {
         const cleanAns = userAns.toLowerCase();
         const validAnswers = (item.answers || []).map(a => a.toLowerCase());
@@ -522,7 +589,7 @@
       } else {
         const minLen = item.minChars || 15;
         if (userAns.length < minLen) {
-          alert(`⚠️ 論述字數不足（目前已輸入 ${userAns.length} 字，電腦驗收需至少 ${minLen} 字）。\n請進一步補充因果鏈機制！`);
+          alert(`⚠️ 論述字數不足（目前已輸入 ${userAns.length} 字，需至少 ${minLen} 字）。\n請進一步補充因果鏈機制！`);
           return;
         }
 
@@ -537,7 +604,6 @@
         const isCompletedToday = (dailyData.completedCardIds || []).includes(item.id);
         const unit = item.unitReward;
 
-        // 若今日尚未完成過該題，才執行累加計分
         if (!isCompletedToday) {
           dailyData[currentSubject] = (dailyData[currentSubject] || 0) + unit;
           dailyData.completedCardIds.push(item.id);
@@ -557,11 +623,78 @@
           alert("💡 此題今日已計分過，本次驗收只作複習，不重複累加單位！");
         }
 
-        // 清空輸入框並推進指針換下一題
         inputEl.value = "";
         cardPointers[currentSubject][currentDeviceMode] = (cardPointers[currentSubject][currentDeviceMode] + 1) % list.length;
         renderCard();
       }
+    };
+
+    // 匯入自定義章節 JSON
+    window.importCustomChapter = async function() {
+      const rawText = document.getElementById("import-json-text").value.trim();
+      if (!rawText) {
+        alert("⚠️ 請先貼上 JSON 格式的章節題庫！");
+        return;
+      }
+
+      try {
+        const data = JSON.parse(rawText);
+        if (!data.book || !data.questions) {
+          throw new Error("JSON 格式缺少 'book' 或 'questions' 欄位。");
+        }
+
+        const sub = data.book.subject || "neuro";
+        
+        // 1. 更新或加入書籍與章節至學習地圖
+        let existingBook = CURRICULUM_DATA.books.find(b => b.title === data.book.title && b.version === data.book.version);
+        if (existingBook) {
+          if (!existingBook.chapters.includes(data.book.chapter)) {
+            existingBook.chapters.push(data.book.chapter);
+          }
+        } else {
+          CURRICULUM_DATA.books.push({
+            id: `book_${Date.now()}`,
+            title: data.book.title,
+            version: data.book.version,
+            subject: sub,
+            chapters: [data.book.chapter]
+          });
+        }
+
+        // 2. 將新題目追加進題庫
+        const bookRefLabel = `${data.book.title} (${data.book.version}) · ${data.book.chapter}`;
+        
+        if (data.questions.desktop) {
+          data.questions.desktop.forEach(q => {
+            q.bookRef = bookRefLabel;
+            CURRICULUM_DATA.questions[sub].desktop.push(q);
+          });
+        }
+        if (data.questions.mobile) {
+          data.questions.mobile.forEach(q => {
+            q.bookRef = bookRefLabel;
+            CURRICULUM_DATA.questions[sub].mobile.push(q);
+          });
+        }
+
+        // 3. 同步至 Firestore 雲端
+        if (currentUser) {
+          const docRef = doc(db, `users/${currentUser.uid}/meta/curriculum`);
+          await setDoc(docRef, CURRICULUM_DATA);
+        }
+
+        alert(`🎉 成功匯入教材【${data.book.title}】的 ${data.book.chapter}！\n已即時加入學習地圖與練習庫。`);
+        document.getElementById("import-json-text").value = "";
+        renderLearningMap();
+        renderCard();
+      } catch (err) {
+        alert("❌ JSON 解析失敗，請確認格式是否正確：\n" + err.message);
+      }
+    };
+
+    // 切換學習地圖面板
+    window.toggleLearningMap = () => {
+      mapPanelEl.classList.toggle("show");
     };
 
     window.switchSubject = (sub) => {
@@ -579,6 +712,9 @@
       if (btn) btn.classList.add("active");
       renderCard();
     };
+
+    // 初始渲染地圖
+    renderLearningMap();
   </script>
 </head>
 <body>
@@ -589,9 +725,30 @@
     <div class="user-info">
       <span class="sync-status"></span><span id="auth-status">連線中...</span>
     </div>
-    <div class="device-switcher">
-      <button id="mode-desktop" class="device-btn active" onclick="setDeviceMode('desktop')">💻 電腦深研</button>
-      <button id="mode-mobile" class="device-btn" onclick="setDeviceMode('mobile')">📱 手機速記</button>
+    <div class="top-actions">
+      <button class="action-btn" onclick="toggleLearningMap()">🗺️ 學習地圖與匯入</button>
+      <div class="device-switcher">
+        <button id="mode-desktop" class="device-btn active" onclick="setDeviceMode('desktop')">💻 電腦深研</button>
+        <button id="mode-mobile" class="device-btn" onclick="setDeviceMode('mobile')">📱 手機速記</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 學習地圖與自定義匯入抽屜 -->
+  <div id="map-panel" class="map-panel">
+    <div class="map-header">
+      <h3>📚 學習地圖：已匯入原文書與章節</h3>
+      <button class="action-btn" style="padding: 2px 8px;" onclick="toggleLearningMap()">✕ 關閉</button>
+    </div>
+    
+    <!-- 書籍與章節標籤清單 -->
+    <div id="book-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+
+    <!-- 匯入自定義章節 -->
+    <div class="import-box">
+      <span style="font-size: 0.8rem; color: #93c5fd; font-weight: bold;">📥 匯入新章節題庫 (貼上 JSON)：</span>
+      <textarea id="import-json-text" placeholder='貼上符合格式的章節 JSON (包含 "book" 與 "questions")...'></textarea>
+      <button class="btn" style="align-self: flex-end; padding: 6px 14px; font-size: 0.85rem;" onclick="importCustomChapter()">解析並同步至學習地圖 ➔</button>
     </div>
   </div>
 
@@ -629,6 +786,7 @@
     <div id="card-body">
       <div>
         <span id="card-badge" class="badge badge-neuro">讀取中</span>
+        <div id="card-source" class="card-source-tag"></div>
         <h2 id="card-title" class="card-title">載入中...</h2>
         <div id="card-meta" class="card-meta-info"></div>
         <p id="card-prompt" class="card-prompt"></p>
