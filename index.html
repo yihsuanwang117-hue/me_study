@@ -644,8 +644,10 @@
         inputContainer.innerHTML = `<input type="text" id="user-ans" placeholder="【📱 手機速記】請在此輸入答案（Enter 送出）..." autocomplete="off">`;
       }
 
-      document.getElementById("reward-unit").textContent = isCompletedToday ? "+0.0 (已累計)" : `+${item.unitReward}`;
-
+const rewardUnitEl = document.getElementById("reward-unit");
+if (rewardUnitEl) {
+  rewardUnitEl.textContent = isCompletedToday ? "+0.0 (已累計)" : `+${item.unitReward}`;
+}
       const userAnsEl = document.getElementById("user-ans");
       if (userAnsEl) {
         userAnsEl.addEventListener("keydown", (e) => {
@@ -1069,9 +1071,9 @@ ${userAns}
         <div id="input-container" class="input-area"></div>
         
         <div class="action-row">
-          <span style="font-size: 0.8rem; color: var(--text-muted);">Enter 或 Ctrl+Enter 快速送出</span>
-          <button id="submit-btn" class="btn" onclick="submitProgress()">驗收提交 (<span id="reward-unit">+0.0</span>)</button>
-        </div>
+  <span style="font-size: 0.8rem; color: var(--text-muted);">Enter 或 Ctrl+Enter 快速送出</span>
+  <button id="submit-btn" class="btn" onclick="submitProgress()">驗收提交 (<span id="reward-unit">+0.0</span>)</button>
+</div>
       </div>
     </div>
 
