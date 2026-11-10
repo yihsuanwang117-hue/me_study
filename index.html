@@ -14,7 +14,7 @@
       --accent-neuro: #38bdf8;
       --accent-german: #f59e0b;
       --accent-spanish: #10b981;
-      --accent-thai: #ec4899; 
+      --accent-thai: #ec4899;
       --locked-red: #ef4444;
     }
 
@@ -88,7 +88,7 @@
       color: var(--text);
     }
 
-    /* Learning Map Panel (可收折) */
+    /* Learning Map Panel */
     .map-panel {
       background: #172554;
       border: 1px solid #1e40af;
@@ -209,7 +209,8 @@
     .badge-neuro { background: rgba(56, 189, 248, 0.2); color: var(--accent-neuro); }
     .badge-german { background: rgba(245, 158, 11, 0.2); color: var(--accent-german); }
     .badge-spanish { background: rgba(16, 185, 129, 0.2); color: var(--accent-spanish); }
-    .badge-thai { background: rgba(236, 72, 153, 0.2); color: var(--accent-thai);
+    .badge-thai { background: rgba(236, 72, 153, 0.2); color: var(--accent-thai); }
+
     .card-title { font-size: 1.15rem; margin-bottom: 6px; }
     .card-source-tag { font-size: 0.75rem; color: #38bdf8; margin-bottom: 8px; font-weight: 500; }
     .card-meta-info { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; }
@@ -288,7 +289,7 @@
       return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei' }).format(new Date());
     };
 
-    // 預設核心題庫與學習地圖資料
+    // 完整結構化題庫（含神經科學、德文、西文、泰文）
     let CURRICULUM_DATA = {
       books: [
         {
@@ -304,14 +305,21 @@
           version: "A1-A2 Hueber",
           subject: "german",
           chapters: ["A1.1: Akkusativ & 定冠詞", "A2.1: Nebensatz mit weil"]
-        }
+        },
         {
-      id: "thai_starter",
-      title: "基礎泰語字母與日常會話",
-      version: "自學入門",
-      subject: "thai",
-      chapters: ["Unit 1: 中輔音與日常招呼", "Unit 2: 性別尾詞與拼讀"]
-    }
+          id: "spanish_gramatica",
+          title: "Gramática de uso del español",
+          version: "A1-A2",
+          subject: "spanish",
+          chapters: ["Unidad 15: Pretérito Indefinido", "Unidad 20: Imperfecto vs Indefinido"]
+        },
+        {
+          id: "thai_starter",
+          title: "基礎泰語字母與日常會話",
+          version: "自學入門",
+          subject: "thai",
+          chapters: ["Unit 1: 中輔音與日常招呼", "Unit 2: 性別尾詞與拼讀"]
+        }
       ],
       questions: {
         neuro: {
@@ -373,49 +381,6 @@
             }
           ]
         },
-        thai: {
-      desktop: [
-        {
-          id: "th_d1",
-          bookRef: "基礎泰語 · Unit 2",
-          track: "泰文 · 拼讀語氣解析",
-          title: "性別禮貌尾詞 (ครับ / ค่ะ) 語用差異",
-          prompt: "【電腦端驗收 · 語法解析】\n請說明泰語中男性與女性專用禮貌尾詞（ครับ 與 ค่ะ / คะ）的發音聲調差異，以及女性在「陳述句」與「疑問句」中使用 ค่ะ 與 คะ 的規則。",
-          unitReward: 0.2,
-          minChars: 12,
-          reference: "男性不論句型一律使用 ครับ (kráp，高化調)；女性在陳述句/打招呼使用 ค่ะ (kâ，落調)，而在疑問句/請求句時使用 คะ (ká，高調)。"
-        }
-      ],
-      mobile: [
-        {
-          id: "th_m1",
-          bookRef: "基礎泰語 · Unit 1",
-          track: "泰文 · 日常招呼",
-          title: "你好 / 早安",
-          prompt: "【手機速記 · 詞彙檢索】\n泰文中不分早晚最通用的問候語「你好（Sawatdee）」的泰文字母拼寫是？（提示：ส...）",
-          unitReward: 0.1,
-          answers: ["สวัสดี", "sawatdee", "sawasdee"]
-        },
-        {
-          id: "th_m2",
-          bookRef: "基礎泰語 · Unit 1",
-          track: "泰文 · 字母辨析",
-          title: "第一個中輔音 ก",
-          prompt: "【手機速記 · 字母快篩】\n泰文字母表的第一個字母「ก」（雞 / kai）屬於哪一類輔音（中輔音 / 高輔音 / 低輔音）？其發音接近漢語拼音的 g 還是 k？",
-          unitReward: 0.1,
-          answers: ["中輔音", "g", "中輔音 g", "中輔音/g"]
-        },
-        {
-          id: "th_m3",
-          bookRef: "基礎泰語 · Unit 1",
-          track: "泰文 · 禮貌用語",
-          title: "謝謝",
-          prompt: "【手機速記】\n泰文的「謝謝（Khop khun）」正確泰文拼寫是？（提示：ข...）",
-          unitReward: 0.1,
-          answers: ["ขอบคุณ", "khop khun", "khob khun"]
-        }
-      ]
-    }
         spanish: {
           desktop: [
             {
@@ -440,6 +405,49 @@
               answers: ["hizo"]
             }
           ]
+        },
+        thai: {
+          desktop: [
+            {
+              id: "th_d1",
+              bookRef: "基礎泰語 · Unit 2",
+              track: "泰文 · 拼讀語氣解析",
+              title: "性別禮貌尾詞 (ครับ / ค่ะ) 語用差異",
+              prompt: "【電腦端驗收 · 語法解析】\n請說明泰語中男性與女性專用禮貌尾詞（ครับ 與 ค่ะ / คะ）的發音聲調差異，以及女性在「陳述句」與「疑問句」中使用 ค่ะ 與 คะ 的規則。",
+              unitReward: 0.2,
+              minChars: 12,
+              reference: "男性不論句型一律使用 ครับ (kráp，高化調)；女性在陳述句/打招呼使用 ค่ะ (kâ，落調)，而在疑問句/請求句時使用 คะ (ká，高調)。"
+            }
+          ],
+          mobile: [
+            {
+              id: "th_m1",
+              bookRef: "基礎泰語 · Unit 1",
+              track: "泰文 · 日常招呼",
+              title: "你好 / 早安",
+              prompt: "【手機速記 · 詞彙檢索】\n泰文中不分早晚最通用的問候語「你好（Sawatdee）」的泰文字母拼寫是？（提示：ส...）",
+              unitReward: 0.1,
+              answers: ["สวัสดี", "sawatdee", "sawasdee"]
+            },
+            {
+              id: "th_m2",
+              bookRef: "基礎泰語 · Unit 1",
+              track: "泰文 · 字母辨析",
+              title: "第一個中輔音 ก",
+              prompt: "【手機速記 · 字母快篩】\n泰文字母表的第一個字母「ก」（雞 / kai）屬於哪一類輔音（中輔音 / 高輔音 / 低輔音）？",
+              unitReward: 0.1,
+              answers: ["中輔音", "中輔音 g", "中輔音/g"]
+            },
+            {
+              id: "th_m3",
+              bookRef: "基礎泰語 · Unit 1",
+              track: "泰文 · 禮貌用語",
+              title: "謝謝",
+              prompt: "【手機速記】\n泰文的「謝謝（Khop khun）」正確泰文拼寫是？（提示：ข...）",
+              unitReward: 0.1,
+              answers: ["ขอบคุณ", "khop khun", "khob khun"]
+            }
+          ]
         }
       }
     };
@@ -452,7 +460,7 @@
     let cardPointers = {
       neuro: { desktop: 0, mobile: 0 },
       german: { desktop: 0, mobile: 0 },
-      spanish: { desktop: 0, mobile: 0 }
+      spanish: { desktop: 0, mobile: 0 },
       thai: { desktop: 0, mobile: 0 }
     };
 
@@ -485,7 +493,6 @@
       }
     });
 
-    // 監聽當日進度
     function listenToDailyLog(uid) {
       const docRef = doc(db, `users/${uid}/daily_logs/${todayDate}`);
       onSnapshot(docRef, (docSnap) => {
@@ -494,16 +501,16 @@
           dailyData.neuro = remote.neuro || 0;
           dailyData.german = remote.german || 0;
           dailyData.spanish = remote.spanish || 0;
+          dailyData.thai = remote.thai || 0;
           dailyData.completedCardIds = Array.isArray(remote.completedCardIds) ? remote.completedCardIds : [];
         } else {
-          setDoc(docRef, { neuro: 0, german: 0, spanish: 0, completedCardIds: [] });
+          setDoc(docRef, { neuro: 0, german: 0, spanish: 0, thai: 0, completedCardIds: [] });
         }
         renderDashboard();
         renderCard();
       });
     }
 
-    // 監聽使用者專屬的教材/題庫
     function listenToCustomCurriculum(uid) {
       const docRef = doc(db, `users/${uid}/meta/curriculum`);
       onSnapshot(docRef, (docSnap) => {
@@ -517,15 +524,12 @@
       });
     }
 
-    // 渲染學習地圖（書名、版本、章節清單）
     function renderLearningMap() {
       bookListEl.innerHTML = "";
       CURRICULUM_DATA.books.forEach(b => {
         const card = document.createElement("div");
         card.className = "book-card";
-        
         let tagsHtml = (b.chapters || []).map(ch => `<span class="chapter-badge">✓ ${ch}</span>`).join("");
-        
         card.innerHTML = `
           <div class="book-title">📖 ${b.title}</div>
           <div class="book-version">版本：${b.version} (${b.subject.toUpperCase()})</div>
@@ -545,7 +549,7 @@
       neuroFillEl.style.background = "var(--accent-neuro)";
       neuroTextEl.textContent = `${neuroUnits.toFixed(1)} / 1.0 單位 ${neuroUnits >= 1.0 ? '✓ 達標' : ''}`;
 
-      // 副線 0.5 門檻
+      // 副線 0.5 門檻（泰文不計入扣打）
       const isNeuroComplete = neuroUnits >= 1.0;
       const subPct = isNeuroComplete ? 100 : Math.min((subUnits / 0.5) * 100, 100);
       subFillEl.style.width = `${subPct}%`;
@@ -563,7 +567,7 @@
       }
     }
 
-    // 渲染卡片核心
+    // 渲染卡片
     window.renderCard = function() {
       const neuroUnits = dailyData.neuro || 0;
       const subUnits = (dailyData.german || 0) + (dailyData.spanish || 0);
@@ -600,7 +604,7 @@
       
       const inputContainer = document.getElementById("input-container");
       if (currentDeviceMode === "desktop") {
-        inputContainer.innerHTML = `<textarea id="user-ans" placeholder="【💻 電腦深研】請詳細輸入機制因果推導或論述（需滿 ${item.minChars || 15} 字）..."></textarea>`;
+        inputContainer.innerHTML = `<textarea id="user-ans" placeholder="【💻 電腦深研】請詳細輸入機制因果推導或論述（需滿 ${item.minChars || 12} 字）..."></textarea>`;
       } else {
         inputContainer.innerHTML = `<input type="text" id="user-ans" placeholder="【📱 手機速記】請在此輸入答案..." autocomplete="off">`;
       }
@@ -640,9 +644,9 @@
           return;
         }
       } else {
-        const minLen = item.minChars || 15;
+        const minLen = item.minChars || 12;
         if (userAns.length < minLen) {
-          alert(`⚠️ 論述字數不足（目前已輸入 ${userAns.length} 字，需至少 ${minLen} 字）。\n請進一步補充因果鏈機制！`);
+          alert(`⚠️ 論述字數不足（目前已輸入 ${userAns.length} 字，需至少 ${minLen} 字）。\n請進一步補充完整機制！`);
           return;
         }
 
@@ -682,7 +686,7 @@
       }
     };
 
-    // 匯入自定義章節 JSON
+    // 匯入自定義章節
     window.importCustomChapter = async function() {
       const rawText = document.getElementById("import-json-text").value.trim();
       if (!rawText) {
@@ -698,7 +702,6 @@
 
         const sub = data.book.subject || "neuro";
         
-        // 1. 更新或加入書籍與章節至學習地圖
         let existingBook = CURRICULUM_DATA.books.find(b => b.title === data.book.title && b.version === data.book.version);
         if (existingBook) {
           if (!existingBook.chapters.includes(data.book.chapter)) {
@@ -714,9 +717,11 @@
           });
         }
 
-        // 2. 將新題目追加進題庫
         const bookRefLabel = `${data.book.title} (${data.book.version}) · ${data.book.chapter}`;
-        
+        if (!CURRICULUM_DATA.questions[sub]) {
+          CURRICULUM_DATA.questions[sub] = { desktop: [], mobile: [] };
+        }
+
         if (data.questions.desktop) {
           data.questions.desktop.forEach(q => {
             q.bookRef = bookRefLabel;
@@ -730,7 +735,6 @@
           });
         }
 
-        // 3. 同步至 Firestore 雲端
         if (currentUser) {
           const docRef = doc(db, `users/${currentUser.uid}/meta/curriculum`);
           await setDoc(docRef, CURRICULUM_DATA);
@@ -745,7 +749,6 @@
       }
     };
 
-    // 切換學習地圖面板
     window.toggleLearningMap = () => {
       mapPanelEl.classList.toggle("show");
     };
@@ -755,7 +758,7 @@
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
       const btn = document.getElementById(`tab-${sub}`);
       if (btn) btn.classList.add("active");
-      renderCard();
+      window.renderCard();
     };
 
     window.setDeviceMode = (mode) => {
@@ -763,10 +766,10 @@
       document.querySelectorAll(".device-btn").forEach(b => b.classList.remove("active"));
       const btn = document.getElementById(`mode-${mode}`);
       if (btn) btn.classList.add("active");
-      renderCard();
+      window.renderCard();
     };
 
-    // 初始渲染地圖
+    // 初始渲染
     renderLearningMap();
   </script>
 </head>
@@ -787,17 +790,15 @@
     </div>
   </div>
 
-  <!-- 學習地圖與自定義匯入抽屜 -->
+  <!-- 學習地圖面板 -->
   <div id="map-panel" class="map-panel">
     <div class="map-header">
-      <h3>📚 學習地圖：已匯入原文書與章節</h3>
+      <h3>📚 學習地圖：已匯入教材與章節</h3>
       <button class="action-btn" style="padding: 2px 8px;" onclick="toggleLearningMap()">✕ 關閉</button>
     </div>
     
-    <!-- 書籍與章節標籤清單 -->
     <div id="book-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
 
-    <!-- 匯入自定義章節 -->
     <div class="import-box">
       <span style="font-size: 0.8rem; color: #93c5fd; font-weight: bold;">📥 匯入新章節題庫 (貼上 JSON)：</span>
       <textarea id="import-json-text" placeholder='貼上符合格式的章節 JSON (包含 "book" 與 "questions")...'></textarea>
@@ -827,11 +828,11 @@
     </div>
   </div>
 
-
+  <!-- Tabs -->
   <div class="tabs">
     <button id="tab-neuro" class="tab-btn active" onclick="switchSubject('neuro')">🧠 神經科學</button>
     <button id="tab-german" class="tab-btn" onclick="switchSubject('german')">🇩🇪 德文 (A1)</button>
-    <button id="tab-spanish" class="tab-btn" onclick="switchSubject('spanish')">🇪🇸 西文 (A2)</button
+    <button id="tab-spanish" class="tab-btn" onclick="switchSubject('spanish')">🇪🇸 西文 (A2)</button>
     <button id="tab-thai" class="tab-btn" onclick="switchSubject('thai')">🇹🇭 泰文 (興趣)</button>
   </div>
 
