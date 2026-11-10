@@ -698,12 +698,12 @@ ${userAns}
   "feedback": "50字內的精準講評，指出正確點或關鍵缺失"
 }`;
 
-     // 依序嘗試 Google AI Studio 官方通用模型端點
+   // 1. 優先嘗試官方支援度最廣的模型正式名稱
       const candidateModels = [
         "gemini-1.5-flash-latest",
-        "gemini-1.5-flash",
-        "gemini-2.0-flash",
-        "gemini-pro"
+        "gemini-1.5-flash-001",
+        "gemini-1.5-flash-002",
+        "gemini-2.0-flash-exp"
       ];
 
       let res = null;
@@ -724,18 +724,31 @@ ${userAns}
           });
 
           if (res.ok) break;
-          
-          const errJson = await res.json().catch(() => ({}));
-          lastErrMsg = errJson.error?.message || `HTTP ${res.status}`;
+          const errData = await res.json().catch(() => ({}));
+          lastErrMsg = errData.error?.message || `HTTP ${res.status}`;
         } catch (e) {
           lastErrMsg = e.message;
         }
       }
 
+      // 2. 如果依然全數 404，代表 API Key 權限或專案 API 未啟用
       if (!res || !res.ok) {
-        if (res && (res.status === 400 || res.status === 403)) {
-          localStorage.removeItem("gemini_api_key");
-          throw new Error("API Key 無效或未開通權限，請確認後重新輸入。");
+        // 主動嘗試向 Google 查詢該 Key 到底有哪些可用模型
+        try {
+          const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+          const listData = await listRes.json();
+          if (listData.models) {
+            const availableNames = listData.models
+              .filter(item => item.supportedGenerationMethods?.includes("generateContent"))
+              .map(item => item.name.replace("models/", ""))
+              .slice(0, 3)
+              .join(", ");
+            throw new Error(`您的 Key 支援的模型為：[${availableNames}]，請重新確認名稱。`);
+          } else if (listData.error) {
+            throw new Error(`金鑰錯誤：${listData.error.message}`);
+          }
+        } catch (inspectErr) {
+          throw new Error(inspectErr.message || `連線失敗：${lastErrMsg}`);
         }
         throw new Error(`AI 端點連線失敗：${lastErrMsg}`);
       }
@@ -744,7 +757,6 @@ ${userAns}
       const outputRaw = data.candidates?.[0]?.content?.parts?.[0]?.text;
       return JSON.parse(outputRaw);
     }
-
     // 提交驗收
     window.submitProgress = async function() {
       const inputEl = document.getElementById("user-ans");
