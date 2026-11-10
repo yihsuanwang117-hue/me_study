@@ -666,7 +666,7 @@ if (rewardUnitEl) {
       }
     };
 
-    // 核心：Gemini Flash API 語意與因果鏈審查函數
+   // 核心：Gemini Flash API 審查函數（純 Flash 備援 + 阻斷 Pro 避免額度報錯）
     async function evaluateWithGemini(userAns, item) {
       const apiKey = localStorage.getItem("gemini_api_key");
       if (!apiKey) {
@@ -700,18 +700,17 @@ ${userAns}
   "feedback": "50字內的精準講評，指出正確點或關鍵缺失"
 }`;
 
-// 配置優先與備援模型陣列（遭遇過載時自動無感切換）
-      const fallbackModels = [
-        "gemini-3.8-flash",
-        "gemini-2.5-pro",
-        "gemini-flash-latest",
-        "gemini-pro-latest"
+      // 只保留高額度、免費層級專用的 Flash 家族，完全排除易被擋的 Pro 系列
+      const flashModels = [
+        "gemini-2.5-flash",
+        "gemini-2.0-flash",
+        "gemini-1.5-flash-latest"
       ];
 
       let lastErrMsg = "";
       let outputRaw = null;
 
-      for (const modelName of fallbackModels) {
+      for (const modelName of flashModels) {
         try {
           const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
             method: "POST",
@@ -728,20 +727,18 @@ ${userAns}
           if (res.ok) {
             const data = await res.json();
             outputRaw = data.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (outputRaw) break; // 成功取得回覆，跳出輪詢
+            if (outputRaw) break;
           } else {
             const errJson = await res.json().catch(() => ({}));
             lastErrMsg = errJson.error?.message || `HTTP ${res.status}`;
-            console.warn(`模型 ${modelName} 回應異常，嘗試切換備援模型...`, lastErrMsg);
           }
         } catch (netErr) {
           lastErrMsg = netErr.message;
-          console.warn(`模型 ${modelName} 連線失敗，切換中...`, netErr);
         }
       }
 
       if (!outputRaw) {
-        throw new Error(`所有可用 AI 模型均暫時過載，請稍候再試：${lastErrMsg}`);
+        throw new Error(`AI_UNAVAILABLE: ${lastErrMsg}`);
       }
 
       return JSON.parse(outputRaw);
@@ -780,7 +777,7 @@ ${userAns}
           return;
         }
       } else {
-        // 電腦端：呼叫 Gemini 1.5 Flash 進行整句因果審查
+        // 電腦端：呼叫 Gemini 進行整句因果審查（含備援自主核驗）
         try {
           submitBtn.disabled = true;
           submitBtn.textContent = "🤖 審查因果鏈中...";
@@ -795,8 +792,15 @@ ${userAns}
             return;
           }
         } catch (err) {
-          alert("⚠️ AI 審查過程發生錯誤：" + err.message);
-          return;
+          // 當遇 API 配額上限或網路繁忙時，啟用自主檢核機制
+          const confirmSelf = confirm(
+            `⚠️ AI 雲端連線繁忙或配額受限。\n\n是否切換為【自主因果核對模式】？\n\n【標準因果機制對照】：\n${item.reference || "請確認是否符合學術推導。"}\n\n若您確認剛才的回答已推導出關鍵機制，請點擊「確定」通過驗收；若推導不完整請按「取消」繼續修改。`
+          );
+          if (confirmSelf) {
+            isPassed = true;
+          } else {
+            return;
+          }
         } finally {
           submitBtn.disabled = false;
           submitBtn.textContent = "驗收提交";
