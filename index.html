@@ -698,40 +698,46 @@ ${userAns}
   "feedback": "50字內的精準講評，指出正確點或關鍵缺失"
 }`;
 
-     // 優先呼叫 Google AI Studio 當前標準的 gemini-2.0-flash
-      let res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: promptText }] }],
-          generationConfig: {
-            temperature: 0.1,
-            responseMimeType: "application/json"
-          }
-        })
-      });
+     // 依序嘗試 Google AI Studio 官方通用模型端點
+      const candidateModels = [
+        "gemini-1.5-flash-latest",
+        "gemini-1.5-flash",
+        "gemini-2.0-flash",
+        "gemini-pro"
+      ];
 
-      // 若專案尚未支援 2.0，自動備援切換為 v1 正式版的 gemini-1.5-flash
-      if (!res.ok) {
-        res = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: promptText }] }],
-            generationConfig: {
-              temperature: 0.1,
-              responseMimeType: "application/json"
-            }
-          })
-        });
-      }
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        if (res.status === 400 || res.status === 403) {
-          localStorage.removeItem("gemini_api_key");
-          throw new Error("API Key 無效或過期，請重新設定。");
+      let res = null;
+      let lastErrMsg = "";
+
+      for (const m of candidateModels) {
+        try {
+          res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${apiKey}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: promptText }] }],
+              generationConfig: {
+                temperature: 0.1,
+                responseMimeType: "application/json"
+              }
+            })
+          });
+
+          if (res.ok) break;
+          
+          const errJson = await res.json().catch(() => ({}));
+          lastErrMsg = errJson.error?.message || `HTTP ${res.status}`;
+        } catch (e) {
+          lastErrMsg = e.message;
         }
-        throw new Error(errData.error?.message || `API 請求失敗 (${res.status})`);
+      }
+
+      if (!res || !res.ok) {
+        if (res && (res.status === 400 || res.status === 403)) {
+          localStorage.removeItem("gemini_api_key");
+          throw new Error("API Key 無效或未開通權限，請確認後重新輸入。");
+        }
+        throw new Error(`AI 端點連線失敗：${lastErrMsg}`);
       }
 
       const data = await res.json();
