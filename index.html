@@ -836,7 +836,12 @@ ${userAns}
       }
     };
 
-    // 匯入自定義章節
+// 智慧標準化課本名稱工具（避免大小寫或標點符號造成誤判）
+    function normalizeBookName(str) {
+      return (str || "").toLowerCase().replace(/[^a-z0-9\u4e00-\u9fa5]/g, "");
+    }
+
+    // 匯入自定義章節（具備智慧模糊去重合併）
     window.importCustomChapter = async function() {
       const rawText = document.getElementById("import-json-text").value.trim();
       if (!rawText) {
@@ -851,23 +856,50 @@ ${userAns}
         }
 
         const sub = data.book.subject || "neuro";
-        
-        let existingBook = CURRICULUM_DATA.books.find(b => b.title === data.book.title && b.version === data.book.version);
+        const incomingTitleNorm = normalizeBookName(data.book.title);
+
+        // 1. 智慧尋找既有課本：只要科目相符且書名核心字串吻合即判定為同一本書
+        let existingBook = CURRICULUM_DATA.books.find(b => 
+          b.subject === sub && (
+            normalizeBookName(b.title) === incomingTitleNorm ||
+            normalizeBookName(b.title).includes(incomingTitleNorm) ||
+            incomingTitleNorm.includes(normalizeBookName(b.title))
+          )
+        );
+
         if (existingBook) {
+          // 課本已存在：僅追加新章節（避免重複標籤）
           if (!existingBook.chapters.includes(data.book.chapter)) {
             existingBook.chapters.push(data.book.chapter);
           }
         } else {
+          // 全新課本：建立新項目
           CURRICULUM_DATA.books.push({
             id: `book_${Date.now()}`,
             title: data.book.title,
-            version: data.book.version,
+            version: data.book.version || "標準版",
             subject: sub,
             chapters: [data.book.chapter]
           });
         }
 
-        const bookRefLabel = `${data.book.title} (${data.book.version}) · ${data.book.chapter}`;
+        // 2. 清理歷史已存在的重複項目（例如先前因字串差異被拆開的卡片）
+        const consolidatedBooks = [];
+        CURRICULUM_DATA.books.forEach(b => {
+          const bNorm = normalizeBookName(b.title);
+          const found = consolidatedBooks.find(item => item.subject === b.subject && normalizeBookName(item.title) === bNorm);
+          if (found) {
+            b.chapters.forEach(ch => {
+              if (!found.chapters.includes(ch)) found.chapters.push(ch);
+            });
+          } else {
+            consolidatedBooks.push({ ...b });
+          }
+        });
+        CURRICULUM_DATA.books = consolidatedBooks;
+
+        // 3. 題庫追加入庫
+        const bookRefLabel = `${data.book.title} · ${data.book.chapter}`;
         if (!CURRICULUM_DATA.questions[sub]) {
           CURRICULUM_DATA.questions[sub] = { desktop: [], mobile: [] };
         }
@@ -875,22 +907,28 @@ ${userAns}
         if (data.questions.desktop) {
           data.questions.desktop.forEach(q => {
             q.bookRef = bookRefLabel;
-            CURRICULUM_DATA.questions[sub].desktop.push(q);
+            // 避免題目 ID 重複造成累積錯誤
+            if (!CURRICULUM_DATA.questions[sub].desktop.some(existQ => existQ.id === q.id)) {
+              CURRICULUM_DATA.questions[sub].desktop.push(q);
+            }
           });
         }
         if (data.questions.mobile) {
           data.questions.mobile.forEach(q => {
             q.bookRef = bookRefLabel;
-            CURRICULUM_DATA.questions[sub].mobile.push(q);
+            if (!CURRICULUM_DATA.questions[sub].mobile.some(existQ => existQ.id === q.id)) {
+              CURRICULUM_DATA.questions[sub].mobile.push(q);
+            }
           });
         }
 
+        // 4. 同步至 Firestore
         if (currentUser) {
           const docRef = doc(db, `users/${currentUser.uid}/meta/curriculum`);
           await setDoc(docRef, CURRICULUM_DATA);
         }
 
-        alert(`🎉 成功匯入教材【${data.book.title}】的 ${data.book.chapter}！\n已即時加入學習地圖與練習庫。`);
+        alert(`🎉 成功更新教材【${data.book.title}】！\n章節已自動歸併至該課本目錄下。`);
         document.getElementById("import-json-text").value = "";
         renderLearningMap();
         renderCard();
