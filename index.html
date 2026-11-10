@@ -122,7 +122,6 @@
       color: #cbd5e1;
     }
 
-    /* Import Section */
     .import-box {
       margin-top: 8px;
       display: flex;
@@ -248,6 +247,32 @@
     }
     .btn:hover { background: #2563eb; }
 
+    /* Thai Immersion Panel */
+    .thai-immersion-box {
+      margin-top: 14px;
+      background: #2e1065;
+      border: 1px solid #7c3aed;
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .token-bubble {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      background: #1e1b4b;
+      border: 1px solid #4338ca;
+      padding: 6px 10px;
+      border-radius: 8px;
+      margin: 4px;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+    .token-bubble:hover { transform: scale(1.05); }
+    .token-bubble.learned { border-color: #10b981; background: #064e3b; }
+
     /* Lock Overlay */
     .lock-overlay {
       position: absolute;
@@ -289,7 +314,6 @@
       return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei' }).format(new Date());
     };
 
-    // 完整結構化題庫（含神經科學、德文、西文、泰文）
     let CURRICULUM_DATA = {
       books: [
         {
@@ -332,7 +356,7 @@
               prompt: "【電腦端驗收 · 英文論述】\n請說明電壓門控鈉通道（Nav）去活化（Inactivation）與活化（Activation）的差異，並深入解釋絕對不應期與相對不應期如何透過分子機制確保動作電位沿軸突「單向（Unidirectional）」傳導。",
               unitReward: 0.5,
               minChars: 15,
-              reference: "標準機制：膜去極化引起 m-gate 開啟（活化），約 1ms 內胞內側 h-gate (ball-and-chain 胜肽) 快速閉合堵塞孔道（去活化）。此去活化狀態導致絕對不應期，即使高強度刺激也無法再次引發動作電位；逆向擴散的局部微電流無法興奮剛去極化過的軸突膜，確保興奮嚴格單向向前傳導。"
+              reference: "去極化使 m-gate 開啟（活化），約 1ms 內胞內側 h-gate (ball-and-chain 胜肽) 快速閉合堵塞孔道（去活化）。此去活化狀態導致絕對不應期，即使高強度刺激也無法再次引發動作電位；逆向擴散的局部微電流無法興奮剛去極化過的軸突膜，確保興奮嚴格單向向前傳導。"
             }
           ],
           mobile: [
@@ -472,7 +496,9 @@
       completedCardIds: []
     };
 
-    // DOM 元素
+    // 泰文單字庫緩存（儲存在 Firestore）
+    let thaiVocabSet = new Map();
+
     const authStatusEl = document.getElementById("auth-status");
     const neuroFillEl = document.getElementById("neuro-fill");
     const neuroTextEl = document.getElementById("neuro-text");
@@ -481,6 +507,7 @@
     const lockOverlayEl = document.getElementById("lock-overlay");
     const mapPanelEl = document.getElementById("map-panel");
     const bookListEl = document.getElementById("book-list");
+    const thaiImmersionBoxEl = document.getElementById("thai-immersion-box");
 
     onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -488,6 +515,7 @@
         authStatusEl.textContent = `已同步 (ID: ${user.uid.slice(0, 6)})`;
         listenToDailyLog(user.uid);
         listenToCustomCurriculum(user.uid);
+        listenToThaiVocab(user.uid);
       } else {
         await signInAnonymously(auth);
       }
@@ -524,6 +552,17 @@
       });
     }
 
+    function listenToThaiVocab(uid) {
+      const docRef = doc(db, `users/${uid}/meta/thai_vocab`);
+      onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+          const vData = docSnap.data().vocab || [];
+          thaiVocabSet.clear();
+          vData.forEach(v => thaiVocabSet.set(v.th, v));
+        }
+      });
+    }
+
     function renderLearningMap() {
       bookListEl.innerHTML = "";
       CURRICULUM_DATA.books.forEach(b => {
@@ -543,13 +582,11 @@
       const neuroUnits = dailyData.neuro || 0;
       const subUnits = (dailyData.german || 0) + (dailyData.spanish || 0);
 
-      // 主線 1.0 達標
       const neuroPct = Math.min((neuroUnits / 1.0) * 100, 100);
       neuroFillEl.style.width = `${neuroPct}%`;
       neuroFillEl.style.background = "var(--accent-neuro)";
       neuroTextEl.textContent = `${neuroUnits.toFixed(1)} / 1.0 單位 ${neuroUnits >= 1.0 ? '✓ 達標' : ''}`;
 
-      // 副線 0.5 門檻（泰文不計入扣打）
       const isNeuroComplete = neuroUnits >= 1.0;
       const subPct = isNeuroComplete ? 100 : Math.min((subUnits / 0.5) * 100, 100);
       subFillEl.style.width = `${subPct}%`;
@@ -567,7 +604,7 @@
       }
     }
 
-    // 渲染卡片
+    // 渲染卡片核心（掛載 Enter 自動送出監聽）
     window.renderCard = function() {
       const neuroUnits = dailyData.neuro || 0;
       const subUnits = (dailyData.german || 0) + (dailyData.spanish || 0);
@@ -578,6 +615,9 @@
         return;
       }
       lockOverlayEl.style.display = "none";
+
+      // 泰文模式下展示「沉浸解析抽屜」
+      thaiImmersionBoxEl.style.display = currentSubject === "thai" ? "flex" : "none";
 
       const subjectPool = CURRICULUM_DATA.questions[currentSubject] || {};
       const list = subjectPool[currentDeviceMode] || [];
@@ -604,12 +644,30 @@
       
       const inputContainer = document.getElementById("input-container");
       if (currentDeviceMode === "desktop") {
-        inputContainer.innerHTML = `<textarea id="user-ans" placeholder="【💻 電腦深研】請詳細輸入機制因果推導或論述（需滿 ${item.minChars || 12} 字）..."></textarea>`;
+        inputContainer.innerHTML = `<textarea id="user-ans" placeholder="【💻 電腦深研】請詳細輸入機制因果推導或論述（需滿 ${item.minChars || 12} 字，Ctrl+Enter 送出）..."></textarea>`;
       } else {
-        inputContainer.innerHTML = `<input type="text" id="user-ans" placeholder="【📱 手機速記】請在此輸入答案..." autocomplete="off">`;
+        inputContainer.innerHTML = `<input type="text" id="user-ans" placeholder="【📱 手機速記】請在此輸入答案（Enter 送出）..." autocomplete="off">`;
       }
 
       document.getElementById("reward-unit").textContent = isCompletedToday ? "+0.0 (已累計)" : `+${item.unitReward}`;
+
+      // 掛載鍵盤快捷鍵：手機端 Enter 直接送出，電腦端 Ctrl/Cmd + Enter 送出
+      const userAnsEl = document.getElementById("user-ans");
+      if (userAnsEl) {
+        userAnsEl.addEventListener("keydown", (e) => {
+          if (currentDeviceMode === "mobile") {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              submitProgress();
+            }
+          } else {
+            if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+              e.preventDefault();
+              submitProgress();
+            }
+          }
+        });
+      }
     };
 
     // 提交驗收
@@ -749,16 +807,77 @@
       }
     };
 
-    window.toggleLearningMap = () => {
-      mapPanelEl.classList.toggle("show");
+    // 泰文沉浸解析器（比對個人詞庫並標註已學單字）
+    window.parseThaiSentence = async function() {
+      const rawText = document.getElementById("thai-sentence-json").value.trim();
+      if (!rawText) return alert("請先貼上句子解析 JSON！");
+
+      try {
+        const parsed = JSON.parse(rawText);
+        const displayEl = document.getElementById("thai-parsed-display");
+        displayEl.innerHTML = "";
+
+        // 渲染完整句子與語法提示
+        const infoDiv = document.createElement("div");
+        infoDiv.innerHTML = `
+          <div style="font-size: 1.05rem; font-weight: bold; color: #fff;">${parsed.sentence.raw}</div>
+          <div style="font-size: 0.85rem; color: #c084fc;">拼音：${parsed.sentence.roman}</div>
+          <div style="font-size: 0.9rem; color: #cbd5e1; margin-top: 4px;">翻譯：${parsed.sentence.translation}</div>
+          <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 4px; border-left: 2px solid #a855f7; padding-left: 6px;">語法：${parsed.grammarNotes || "無"}</div>
+          <div style="margin-top: 10px; font-size: 0.8rem; color: #e9d5ff; font-weight: bold;">點擊單字可加入/更新個人單字庫：</div>
+        `;
+        displayEl.appendChild(infoDiv);
+
+        const tokenContainer = document.createElement("div");
+        tokenContainer.style.display = "flex";
+        tokenContainer.style.flexWrap = "wrap";
+        tokenContainer.style.marginTop = "8px";
+
+        // 逐字標記比對
+        (parsed.tokens || []).forEach(tk => {
+          const isLearned = thaiVocabSet.has(tk.th);
+          const btn = document.createElement("div");
+          btn.className = `token-bubble ${isLearned ? 'learned' : ''}`;
+          btn.innerHTML = `
+            <span style="font-size: 0.95rem; font-weight: bold; color: #fff;">${tk.th}</span>
+            <span style="font-size: 0.7rem; color: #c084fc;">${tk.ro}</span>
+            <span style="font-size: 0.75rem; color: #e2e8f0;">${tk.zh}</span>
+            <span style="font-size: 0.65rem; color: #94a3b8;">${isLearned ? '✓ 已收錄' : '+ 新生詞'}</span>
+          `;
+
+          btn.onclick = async () => {
+            if (currentUser) {
+              const currentV = thaiVocabSet.get(tk.th) || { ...tk, seenCount: 0 };
+              currentV.seenCount = (currentV.seenCount || 0) + 1;
+              thaiVocabSet.set(tk.th, currentV);
+
+              const docRef = doc(db, `users/${currentUser.uid}/meta/thai_vocab`);
+              await setDoc(docRef, { vocab: Array.from(thaiVocabSet.values()) });
+
+              btn.classList.add("learned");
+              btn.querySelector("span:last-child").textContent = `✓ 已收錄 (${currentV.seenCount}次)`;
+              alert(`已將「${tk.th}」同步至個人泰文詞庫！累計遇見：${currentV.seenCount} 次`);
+            }
+          };
+
+          tokenContainer.appendChild(btn);
+        });
+
+        displayEl.appendChild(tokenContainer);
+        document.getElementById("thai-sentence-json").value = "";
+      } catch (e) {
+        alert("解析失敗，請確認 JSON 格式：" + e.message);
+      }
     };
+
+    window.toggleLearningMap = () => mapPanelEl.classList.toggle("show");
 
     window.switchSubject = (sub) => {
       currentSubject = sub;
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
       const btn = document.getElementById(`tab-${sub}`);
       if (btn) btn.classList.add("active");
-      window.renderCard();
+      renderCard();
     };
 
     window.setDeviceMode = (mode) => {
@@ -766,10 +885,9 @@
       document.querySelectorAll(".device-btn").forEach(b => b.classList.remove("active"));
       const btn = document.getElementById(`mode-${mode}`);
       if (btn) btn.classList.add("active");
-      window.renderCard();
+      renderCard();
     };
 
-    // 初始渲染
     renderLearningMap();
   </script>
 </head>
@@ -851,7 +969,7 @@
         <div id="input-container" class="input-area"></div>
         
         <div class="action-row">
-          <span style="font-size: 0.8rem; color: var(--text-muted);">答對即切換下一題</span>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">Enter 或 Ctrl+Enter 快速送出</span>
           <button class="btn" onclick="submitProgress()">驗收提交 (<span id="reward-unit">+0.0</span>)</button>
         </div>
       </div>
@@ -865,6 +983,16 @@
       </p>
       <button class="btn" onclick="switchSubject('neuro')">立即前往神經科學 ➔</button>
     </div>
+  </div>
+
+  <!-- 泰文專屬：語境浸潤解析室與個人單字庫 (切換到泰文時顯示) -->
+  <div id="thai-immersion-box" class="thai-immersion-box" style="display: none;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <span style="font-size: 0.9rem; font-weight: bold; color: #f472b6;">🇹🇭 泰文沉浸解析室 (影片字幕 / 感興趣句子)</span>
+    </div>
+    <textarea id="thai-sentence-json" style="width: 100%; height: 60px; background: #1e1b4b; border: 1px solid #6b21a8; color: #fff; font-size: 0.8rem; border-radius: 6px; padding: 6px; font-family: monospace;" placeholder="貼入由 Gemini 解析的泰文句子 JSON..."></textarea>
+    <button class="btn" style="background: #a855f7; align-self: flex-end; padding: 6px 14px; font-size: 0.85rem;" onclick="parseThaiSentence()">解析句子與標記生詞 ➔</button>
+    <div id="thai-parsed-display" style="margin-top: 6px;"></div>
   </div>
 </div>
 
