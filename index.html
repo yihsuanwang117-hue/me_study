@@ -698,26 +698,50 @@ ${userAns}
   "feedback": "50字內的精準講評，指出正確點或關鍵缺失"
 }`;
 
- // 直接呼叫經診斷可用的 gemini-2.5-flash 模型
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: promptText }] }],
-          generationConfig: {
-            temperature: 0.1,
-            responseMimeType: "application/json"
-          }
-        })
-      });
+// 配置優先與備援模型陣列（遭遇過載時自動無感切換）
+      const fallbackModels = [
+        "gemini-3.8-flash",
+        "gemini-2.5-pro",
+        "gemini-flash-latest",
+        "gemini-pro-latest"
+      ];
 
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson.error?.message || `HTTP ${res.status}`);
+      let lastErrMsg = "";
+      let outputRaw = null;
+
+      for (const modelName of fallbackModels) {
+        try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: promptText }] }],
+              generationConfig: {
+                temperature: 0.1,
+                responseMimeType: "application/json"
+              }
+            })
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            outputRaw = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (outputRaw) break; // 成功取得回覆，跳出輪詢
+          } else {
+            const errJson = await res.json().catch(() => ({}));
+            lastErrMsg = errJson.error?.message || `HTTP ${res.status}`;
+            console.warn(`模型 ${modelName} 回應異常，嘗試切換備援模型...`, lastErrMsg);
+          }
+        } catch (netErr) {
+          lastErrMsg = netErr.message;
+          console.warn(`模型 ${modelName} 連線失敗，切換中...`, netErr);
+        }
       }
 
-      const data = await res.json();
-      const outputRaw = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!outputRaw) {
+        throw new Error(`所有可用 AI 模型均暫時過載，請稍候再試：${lastErrMsg}`);
+      }
+
       return JSON.parse(outputRaw);
     }
     // 提交驗收
