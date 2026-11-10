@@ -14,6 +14,7 @@
       --accent-neuro: #38bdf8;
       --accent-german: #f59e0b;
       --accent-spanish: #10b981;
+      --accent-thai: #ec4899; 
       --locked-red: #ef4444;
     }
 
@@ -208,7 +209,7 @@
     .badge-neuro { background: rgba(56, 189, 248, 0.2); color: var(--accent-neuro); }
     .badge-german { background: rgba(245, 158, 11, 0.2); color: var(--accent-german); }
     .badge-spanish { background: rgba(16, 185, 129, 0.2); color: var(--accent-spanish); }
-
+    .badge-thai { background: rgba(236, 72, 153, 0.2); color: var(--accent-thai);
     .card-title { font-size: 1.15rem; margin-bottom: 6px; }
     .card-source-tag { font-size: 0.75rem; color: #38bdf8; margin-bottom: 8px; font-weight: 500; }
     .card-meta-info { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; }
@@ -304,6 +305,13 @@
           subject: "german",
           chapters: ["A1.1: Akkusativ & 定冠詞", "A2.1: Nebensatz mit weil"]
         }
+        {
+      id: "thai_starter",
+      title: "基礎泰語字母與日常會話",
+      version: "自學入門",
+      subject: "thai",
+      chapters: ["Unit 1: 中輔音與日常招呼", "Unit 2: 性別尾詞與拼讀"]
+    }
       ],
       questions: {
         neuro: {
@@ -365,6 +373,49 @@
             }
           ]
         },
+        thai: {
+      desktop: [
+        {
+          id: "th_d1",
+          bookRef: "基礎泰語 · Unit 2",
+          track: "泰文 · 拼讀語氣解析",
+          title: "性別禮貌尾詞 (ครับ / ค่ะ) 語用差異",
+          prompt: "【電腦端驗收 · 語法解析】\n請說明泰語中男性與女性專用禮貌尾詞（ครับ 與 ค่ะ / คะ）的發音聲調差異，以及女性在「陳述句」與「疑問句」中使用 ค่ะ 與 คะ 的規則。",
+          unitReward: 0.2,
+          minChars: 12,
+          reference: "男性不論句型一律使用 ครับ (kráp，高化調)；女性在陳述句/打招呼使用 ค่ะ (kâ，落調)，而在疑問句/請求句時使用 คะ (ká，高調)。"
+        }
+      ],
+      mobile: [
+        {
+          id: "th_m1",
+          bookRef: "基礎泰語 · Unit 1",
+          track: "泰文 · 日常招呼",
+          title: "你好 / 早安",
+          prompt: "【手機速記 · 詞彙檢索】\n泰文中不分早晚最通用的問候語「你好（Sawatdee）」的泰文字母拼寫是？（提示：ส...）",
+          unitReward: 0.1,
+          answers: ["สวัสดี", "sawatdee", "sawasdee"]
+        },
+        {
+          id: "th_m2",
+          bookRef: "基礎泰語 · Unit 1",
+          track: "泰文 · 字母辨析",
+          title: "第一個中輔音 ก",
+          prompt: "【手機速記 · 字母快篩】\n泰文字母表的第一個字母「ก」（雞 / kai）屬於哪一類輔音（中輔音 / 高輔音 / 低輔音）？其發音接近漢語拼音的 g 還是 k？",
+          unitReward: 0.1,
+          answers: ["中輔音", "g", "中輔音 g", "中輔音/g"]
+        },
+        {
+          id: "th_m3",
+          bookRef: "基礎泰語 · Unit 1",
+          track: "泰文 · 禮貌用語",
+          title: "謝謝",
+          prompt: "【手機速記】\n泰文的「謝謝（Khop khun）」正確泰文拼寫是？（提示：ข...）",
+          unitReward: 0.1,
+          answers: ["ขอบคุณ", "khop khun", "khob khun"]
+        }
+      ]
+    }
         spanish: {
           desktop: [
             {
@@ -402,12 +453,14 @@
       neuro: { desktop: 0, mobile: 0 },
       german: { desktop: 0, mobile: 0 },
       spanish: { desktop: 0, mobile: 0 }
+      thai: { desktop: 0, mobile: 0 }
     };
 
     let dailyData = {
       neuro: 0,
       german: 0,
       spanish: 0,
+      thai: 0,
       completedCardIds: []
     };
 
@@ -774,11 +827,12 @@
     </div>
   </div>
 
-  <!-- Tabs -->
+
   <div class="tabs">
     <button id="tab-neuro" class="tab-btn active" onclick="switchSubject('neuro')">🧠 神經科學</button>
     <button id="tab-german" class="tab-btn" onclick="switchSubject('german')">🇩🇪 德文 (A1)</button>
-    <button id="tab-spanish" class="tab-btn" onclick="switchSubject('spanish')">🇪🇸 西文 (A2)</button>
+    <button id="tab-spanish" class="tab-btn" onclick="switchSubject('spanish')">🇪🇸 西文 (A2)</button
+    <button id="tab-thai" class="tab-btn" onclick="switchSubject('thai')">🇹🇭 泰文 (興趣)</button>
   </div>
 
   <!-- Card Body -->
