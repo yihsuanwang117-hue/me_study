@@ -49,7 +49,7 @@
     .user-info { font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; }
     .sync-status { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; margin-right: 6px; }
 
-    /* Dashboard: 進度與互鎖指示 */
+    /* Dashboard */
     .dashboard {
       background: var(--card-bg);
       padding: 18px;
@@ -59,17 +59,8 @@
       flex-direction: column;
       gap: 14px;
     }
-    .track-row {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .track-meta {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.9rem;
-      font-weight: 600;
-    }
+    .track-row { display: flex; flex-direction: column; gap: 6px; }
+    .track-meta { display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 600; }
     .progress-bar-bg {
       height: 10px;
       background: #0f172a;
@@ -83,7 +74,7 @@
       transition: width 0.3s ease, background 0.3s ease;
     }
 
-    /* Mode Selector (Device Context) */
+    /* Mode Selector */
     .device-switcher {
       display: flex;
       background: #0f172a;
@@ -108,10 +99,7 @@
     }
 
     /* Subject Tabs */
-    .tabs {
-      display: flex;
-      gap: 8px;
-    }
+    .tabs { display: flex; gap: 8px; }
     .tab-btn {
       flex: 1;
       padding: 10px;
@@ -123,15 +111,8 @@
       font-weight: bold;
       transition: all 0.2s;
     }
-    .tab-btn.active {
-      color: var(--text);
-      border-color: var(--accent-neuro);
-    }
-    .tab-btn.locked {
-      border-color: var(--locked-red);
-      color: var(--locked-red);
-      opacity: 0.7;
-    }
+    .tab-btn.active { color: var(--text); border-color: var(--accent-neuro); }
+    .tab-btn.locked { border-color: var(--locked-red); color: var(--locked-red); opacity: 0.7; }
 
     /* Learning Card Core */
     .stage-card {
@@ -139,7 +120,7 @@
       border-radius: 16px;
       border: 1px solid var(--border);
       padding: 24px;
-      min-height: 280px;
+      min-height: 300px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -158,8 +139,9 @@
     .badge-german { background: rgba(245, 158, 11, 0.2); color: var(--accent-german); }
     .badge-spanish { background: rgba(16, 185, 129, 0.2); color: var(--accent-spanish); }
 
-    .card-title { font-size: 1.15rem; margin-bottom: 12px; }
-    .card-prompt { font-size: 0.95rem; color: #cbd5e1; margin-bottom: 16px; white-space: pre-line; }
+    .card-title { font-size: 1.15rem; margin-bottom: 8px; }
+    .card-meta-info { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; }
+    .card-prompt { font-size: 0.95rem; color: #cbd5e1; margin-bottom: 16px; white-space: pre-line; line-height: 1.6; }
 
     /* Answer Area */
     .input-area { margin-bottom: 16px; }
@@ -173,11 +155,12 @@
       font-size: 0.95rem;
       font-family: inherit;
     }
-    textarea { height: 110px; resize: vertical; }
+    textarea { height: 120px; resize: vertical; }
 
     .action-row {
       display: flex;
-      justify-content: flex-end;
+      justify-content: space-between;
+      align-items: center;
       gap: 10px;
     }
     .btn {
@@ -191,7 +174,6 @@
       transition: background 0.2s;
     }
     .btn:hover { background: #2563eb; }
-    .btn:disabled { background: #475569; cursor: not-allowed; }
 
     /* Lock Overlay */
     .lock-overlay {
@@ -199,7 +181,7 @@
       top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(15, 23, 42, 0.95);
       border-radius: 16px;
-      display: flex;
+      display: none;
       flex-direction: column;
       justify-content: center;
       align-items: center;
@@ -216,7 +198,6 @@
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
     import { getFirestore, doc, onSnapshot, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
-    // Firebase 專案設定
     const firebaseConfig = {
       apiKey: "AIzaSyC3A8sd0lc18X8Hulo37q0rQA4iLV1GzOE",
       authDomain: "me-study-2fa07.firebaseapp.com",
@@ -232,11 +213,12 @@
     const db = getFirestore(app);
 
     const getTaipeiDate = () => {
-      const now = new Date();
-      return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei' }).format(now);
+      return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei' }).format(new Date());
     };
 
-    // 完整題庫設計
+    // ==========================================
+    // 嚴謹校訂之專業多題庫
+    // ==========================================
     const CONTENT_STORE = {
       neuro: {
         desktop: [
@@ -244,20 +226,45 @@
             id: "neu_d1",
             track: "神經科學 · 機制推導 (Level 1/2)",
             title: "動作電位離子動力學與單向傳導機制",
-            prompt: "【電腦端驗收 · 英文論述】\n請說明電壓門控鈉通道（Nav）去活化（Inactivation）與活化（Activation）的差異，並說明絕對不應期與相對不應期如何保證動作電位單向傳導。",
+            prompt: "【電腦端驗收 · 英文論述】\n請說明電壓門控鈉通道（Nav）去活化（Inactivation）與活化（Activation）的差異，並深入解釋絕對不應期與相對不應期如何透過分子機制確保動作電位沿軸突「單向（Unidirectional）」傳導。",
             unitReward: 0.5,
             minChars: 15,
-            reference: "去極化使鈉通道活化開啟，隨後 h-gate 快速關閉導致去活化與絕對不應期，阻擋逆向興奮，確保傳導單向。"
+            reference: "標準機制：膜去極化引起 m-gate 開啟（活化），約 1ms 內胞內側 h-gate (ball-and-chain 胜肽) 快速閉合堵塞孔道（去活化）。此去活化狀態導致絕對不應期，即使高強度刺激也無法再次引發動作電位；逆向擴散的局部微電流無法興奮剛去極化過的軸突膜，確保興奮嚴格單向向前傳導。"
+          },
+          {
+            id: "neu_d2",
+            track: "神經科學 · 突觸機制 (Level 2/3)",
+            title: "突觸小泡融合與鈣離子感測",
+            prompt: "【電腦端驗收 · 因果鏈分析】\n請簡述動作電位到達軸突末梢後，促使神經遞質釋放的完整分子因果鏈（需包含電壓門控鈣通道、SNARE 複合體三種蛋白與 Synaptotagmin-1 的角色）。",
+            unitReward: 0.5,
+            minChars: 15,
+            reference: "因果鏈：動作電位去極化突觸前膜 -> 活化電壓門控 Ca2+ 通道使 Ca2+ 內流 -> Ca2+ 結合至突觸小泡膜上的 Synaptotagmin-1 -> 驅動核心 SNARE 複合體（Synaptobrevin, Syntaxin-1, SNAP-25）捲曲拉緊 -> 克服靜電斥力完成小泡膜與突觸前膜融合（Pore opening）釋放遞質。"
           }
         ],
         mobile: [
           {
             id: "neu_m1",
             track: "神經科學 · 隨身速記",
-            title: "神經遞質受體分類辨別",
-            prompt: "【手機速記 · 概念快檢】\nNMDA 受體在靜止膜電位下被哪一種二價陽離子阻斷？",
+            title: "NMDA 受體電壓依賴性阻斷",
+            prompt: "【手機速記 · 離子檢索】\nNMDA 受體在神經元處於靜止膜電位時，會被細胞外的哪一種二價陽離子物理性阻斷通道孔？",
             unitReward: 0.1,
             answers: ["mg2+", "鎂", "鎂離子", "magnesium", "mg"]
+          },
+          {
+            id: "neu_m2",
+            track: "神經科學 · 隨身速記",
+            title: "離子平衡電位 (Nernst 方程)",
+            prompt: "【手機速記 · 生物物理】\n正常生理狀態下，神經元細胞內濃度遠高於細胞外、且平衡電位約在 -70 mV 至 -90 mV 的主要陽離子是？",
+            unitReward: 0.1,
+            answers: ["k+", "鉀", "鉀離子", "potassium", "k"]
+          },
+          {
+            id: "neu_m3",
+            track: "神經科學 · 實驗統計",
+            title: "雙組均值檢驗",
+            prompt: "【手機速記 · 統計工具】\n欲檢驗藥物組與對照組小鼠在水迷宮停留時間的平均值是否有顯著差異（數據符合常態性與方差同質性），應使用何種統計檢驗？",
+            unitReward: 0.1,
+            answers: ["t-test", "student's t-test", "t檢定", "雙樣本t檢定", "獨立樣本t檢定"]
           }
         ]
       },
@@ -271,16 +278,41 @@
             unitReward: 0.2,
             minChars: 10,
             reference: "Ich lerne heute fleißig Deutsch, weil ich 2027 in Deutschland studieren möchte."
+          },
+          {
+            id: "de_d2",
+            track: "德文 · A2 介系詞與格位",
+            title: "二位介系詞 (Wechselpräpositionen)",
+            prompt: "【電腦端驗收 · 語境判斷】\n請用 'stellen' (放/立) 或 'stehen' (處於) 造一個句子，說明「我把書放在桌子上（動態/Akkusativ）」或「書在桌上（靜態/Dativ）」。",
+            unitReward: 0.2,
+            minChars: 8,
+            reference: "動態：Ich stelle das Buch auf den Tisch. / 靜態：Das Buch steht auf dem Tisch."
           }
         ],
         mobile: [
           {
             id: "de_m1",
             track: "德文 · A1 格位快問",
-            title: "Akkusativ 定冠詞變位",
-            prompt: "【手機速記 · 填空】\nDer Mann kauft _____ (der) Tisch. (請填入正確冠詞形式)",
+            title: "Akkusativ 陽性冠詞",
+            prompt: "【手機速記 · 填空】\nDer Mann kauft _____ (der) Tisch. (請填入正確的定冠詞形式)",
             unitReward: 0.1,
             answers: ["den"]
+          },
+          {
+            id: "de_m2",
+            track: "德文 · 名詞性別記憶",
+            title: "der / die / das 快速辨識",
+            prompt: "【手機速記】\n德文單字 'Gehirn'（大腦）的正確定冠詞是？",
+            unitReward: 0.1,
+            answers: ["das"]
+          },
+          {
+            id: "de_m3",
+            track: "德文 · 介系詞支配",
+            title: "支配 Dativ 介系詞",
+            prompt: "【手機速記 · 填空】\nIch fahre mit _____ (das) Fahrrad zur Universität. (請填入正確冠詞形式)",
+            unitReward: 0.1,
+            answers: ["dem"]
           }
         ]
       },
@@ -290,10 +322,10 @@
             id: "es_d1",
             track: "西文 · A2 時態深度辨析",
             title: "Indefinido 與 Imperfecto 綜合寫作",
-            prompt: "【電腦端驗收 · 段落推導】\n請造一個包含「持續背景（Imperfecto）」與「突發動作（Indefinido）」的複式句。",
+            prompt: "【電腦端驗收 · 段落推導】\n請造一個包含「持續背景（Imperfecto）」與「突發動作（Indefinido）」的複式句（至少包含 cuando 或 mientras）。",
             unitReward: 0.2,
-            minChars: 10,
-            reference: "Cuando yo dormía, sonó el teléfono."
+            minChars: 8,
+            reference: "Cuando yo dormía, sonó el teléfono. / Mientras estudiábamos, empezó a llover."
           }
         ],
         mobile: [
@@ -301,9 +333,25 @@
             id: "es_m1",
             track: "西文 · A2 動詞變位快篩",
             title: "不規則動詞 Indefinido",
-            prompt: "【手機速記】\n動詞 'hacer' 在第三人稱單數 (él/ella) 的 Indefinido 變位是？",
+            prompt: "【手機速記】\n動詞 'hacer' 在第三人稱單數 (él/ella/usted) 的 Pretérito Indefinido 變位是？",
             unitReward: 0.1,
             answers: ["hizo"]
+          },
+          {
+            id: "es_m2",
+            track: "西文 · A2 動詞變位快篩",
+            title: "動詞 ir / ser 過去時",
+            prompt: "【手機速記】\n動詞 'ir'（去）在第一人稱單數 (yo) 的 Pretérito Indefinido 變位是？",
+            unitReward: 0.1,
+            answers: ["fui"]
+          },
+          {
+            id: "es_m3",
+            track: "西文 · 前置詞用法",
+            title: "個人前置詞 a",
+            prompt: "【手機速記 · 填空】\nVeo _____ Juan todos los días en la biblioteca. (指代具體人物受詞需填入的前置詞是？)",
+            unitReward: 0.1,
+            answers: ["a"]
           }
         ]
       }
@@ -314,13 +362,22 @@
     let todayDate = getTaipeiDate();
     let currentSubject = "neuro";
     let currentDeviceMode = "desktop";
+    
+    // 各科各模式的題目索引指針
+    let cardPointers = {
+      neuro: { desktop: 0, mobile: 0 },
+      german: { desktop: 0, mobile: 0 },
+      spanish: { desktop: 0, mobile: 0 }
+    };
+
     let dailyData = {
       neuro: 0,
       german: 0,
-      spanish: 0
+      spanish: 0,
+      completedCardIds: [] // 記錄今日已計分的題目 ID
     };
 
-    // UI 元件參照
+    // DOM 元素
     const authStatusEl = document.getElementById("auth-status");
     const neuroFillEl = document.getElementById("neuro-fill");
     const neuroTextEl = document.getElementById("neuro-text");
@@ -328,43 +385,44 @@
     const subTextEl = document.getElementById("sub-text");
     const lockOverlayEl = document.getElementById("lock-overlay");
 
-    // 身份驗證初始化
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         currentUser = user;
-        authStatusEl.textContent = `已即時同步 (ID: ${user.uid.slice(0, 6)})`;
+        authStatusEl.textContent = `已同步 (ID: ${user.uid.slice(0, 6)})`;
         listenToDailyLog(user.uid);
       } else {
         await signInAnonymously(auth);
       }
     });
 
-    // 監聽當日紀錄
     function listenToDailyLog(uid) {
       const docRef = doc(db, `users/${uid}/daily_logs/${todayDate}`);
       onSnapshot(docRef, (docSnap) => {
         if (docSnap.exists()) {
-          dailyData = docSnap.data();
+          const remote = docSnap.data();
+          dailyData.neuro = remote.neuro || 0;
+          dailyData.german = remote.german || 0;
+          dailyData.spanish = remote.spanish || 0;
+          dailyData.completedCardIds = Array.isArray(remote.completedCardIds) ? remote.completedCardIds : [];
         } else {
-          setDoc(docRef, { neuro: 0, german: 0, spanish: 0 });
+          setDoc(docRef, { neuro: 0, german: 0, spanish: 0, completedCardIds: [] });
         }
         renderDashboard();
         renderCard();
       });
     }
 
-    // 儀表板計算
     function renderDashboard() {
       const neuroUnits = dailyData.neuro || 0;
       const subUnits = (dailyData.german || 0) + (dailyData.spanish || 0);
 
-      // 主線計算
+      // 主線 1.0 單位達標判定
       const neuroPct = Math.min((neuroUnits / 1.0) * 100, 100);
       neuroFillEl.style.width = `${neuroPct}%`;
       neuroFillEl.style.background = "var(--accent-neuro)";
       neuroTextEl.textContent = `${neuroUnits.toFixed(1)} / 1.0 單位 ${neuroUnits >= 1.0 ? '✓ 達標' : ''}`;
 
-      // 副線互鎖計算
+      // 副線 0.5 額度互鎖
       const isNeuroComplete = neuroUnits >= 1.0;
       const subPct = isNeuroComplete ? 100 : Math.min((subUnits / 0.5) * 100, 100);
       subFillEl.style.width = `${subPct}%`;
@@ -382,7 +440,7 @@
       }
     }
 
-    // 渲染卡片核心
+    // 渲染卡片核心：動態支援換題與今日驗收狀態提示
     window.renderCard = function() {
       const neuroUnits = dailyData.neuro || 0;
       const subUnits = (dailyData.german || 0) + (dailyData.spanish || 0);
@@ -399,27 +457,34 @@
 
       if (!list || list.length === 0) {
         document.getElementById("card-badge").textContent = "無題目";
-        document.getElementById("card-title").textContent = "此模式目前無可用題目";
+        document.getElementById("card-title").textContent = "此模式目前無題目";
         document.getElementById("card-prompt").textContent = "請切換模式或學科。";
         document.getElementById("reward-unit").textContent = "+0.0";
         return;
       }
 
-      const item = list[0];
+      // 依當前指針取題（循環切換）
+      const pointer = cardPointers[currentSubject][currentDeviceMode] % list.length;
+      const item = list[pointer];
+
+      const isCompletedToday = (dailyData.completedCardIds || []).includes(item.id);
 
       document.getElementById("card-badge").textContent = item.track || "學習進度";
       document.getElementById("card-badge").className = `badge badge-${currentSubject}`;
-      document.getElementById("card-title").textContent = item.title || "";
-      document.getElementById("card-prompt").textContent = item.prompt || "";
+      document.getElementById("card-title").textContent = item.title;
+      
+      // 顯示題號進度與今日計分狀態
+      document.getElementById("card-meta").textContent = `題目 ${pointer + 1} / ${list.length} ${isCompletedToday ? '· (今日已驗收，重複練習不重複計分)' : ''}`;
+      document.getElementById("card-prompt").textContent = item.prompt;
       
       const inputContainer = document.getElementById("input-container");
       if (currentDeviceMode === "desktop") {
-        inputContainer.innerHTML = `<textarea id="user-ans" placeholder="【💻 電腦深研】請詳細輸入機制推導、因果鏈論述或完整句子（需滿 ${item.minChars || 15} 字）..."></textarea>`;
+        inputContainer.innerHTML = `<textarea id="user-ans" placeholder="【💻 電腦深研】請詳細輸入機制因果推導或論述（需滿 ${item.minChars || 15} 字）..."></textarea>`;
       } else {
-        inputContainer.innerHTML = `<input type="text" id="user-ans" placeholder="【📱 手機速記】請在此輸入答案或簡答..." autocomplete="off">`;
+        inputContainer.innerHTML = `<input type="text" id="user-ans" placeholder="【📱 手機速記】請在此輸入答案..." autocomplete="off">`;
       }
 
-      document.getElementById("reward-unit").textContent = `+${item.unitReward}`;
+      document.getElementById("reward-unit").textContent = isCompletedToday ? "+0.0 (已累計)" : `+${item.unitReward}`;
     };
 
     // 提交驗收邏輯
@@ -428,7 +493,6 @@
       if (!inputEl) return;
       const userAns = inputEl.value.trim();
 
-      // 空白防呆
       if (!userAns) {
         alert("⚠️ 請先在輸入框填寫回答內容！");
         return;
@@ -437,18 +501,20 @@
       const subjectPool = CONTENT_STORE[currentSubject] || {};
       const list = subjectPool[currentDeviceMode] || [];
       if (!list || list.length === 0) return;
-      const item = list[0];
+      
+      const pointer = cardPointers[currentSubject][currentDeviceMode] % list.length;
+      const item = list[pointer];
 
       let isPassed = false;
 
-      // 分流驗收
+      // 模式驗證
       if (currentDeviceMode === "mobile") {
         const cleanAns = userAns.toLowerCase();
         const validAnswers = (item.answers || []).map(a => a.toLowerCase());
         
         if (validAnswers.includes(cleanAns)) {
           isPassed = true;
-          alert(`🎉 回答正確！獲得 +${item.unitReward} 單位進度。`);
+          alert(`🎉 回答正確！`);
         } else {
           alert(`❌ 答案有誤。\n您的回答：${userAns}\n參考正解：${item.answers ? item.answers[0] : "請重新確認"}`);
           return;
@@ -456,7 +522,7 @@
       } else {
         const minLen = item.minChars || 15;
         if (userAns.length < minLen) {
-          alert(`⚠️ 論述內容過短（目前已輸入 ${userAns.length} 字，電腦驗收需至少 ${minLen} 字）。\n請進一步補充因果機制！`);
+          alert(`⚠️ 論述字數不足（目前已輸入 ${userAns.length} 字，電腦驗收需至少 ${minLen} 字）。\n請進一步補充因果鏈機制！`);
           return;
         }
 
@@ -464,45 +530,54 @@
         const feedback = item.reference 
           ? `\n\n【標準因果機制對照】：\n${item.reference}` 
           : "";
-        alert(`✅ 電腦深研驗收通過！獲得 +${item.unitReward} 單位進度。${feedback}`);
+        alert(`✅ 電腦深研驗收通過！${feedback}`);
       }
 
-      // 累加並寫入 Firestore
       if (isPassed) {
+        const isCompletedToday = (dailyData.completedCardIds || []).includes(item.id);
         const unit = item.unitReward;
 
-        if (currentUser) {
-          try {
-            const docRef = doc(db, `users/${currentUser.uid}/daily_logs/${todayDate}`);
-            await updateDoc(docRef, {
-              [currentSubject]: increment(unit)
-            });
-          } catch (e) {
-            console.error("更新 Firestore 失敗：", e);
-            alert("寫入雲端失敗，請確認 Firestore 權限。");
+        // 若今日尚未完成過該題，才執行累加計分
+        if (!isCompletedToday) {
+          dailyData[currentSubject] = (dailyData[currentSubject] || 0) + unit;
+          dailyData.completedCardIds.push(item.id);
+
+          if (currentUser) {
+            try {
+              const docRef = doc(db, `users/${currentUser.uid}/daily_logs/${todayDate}`);
+              await updateDoc(docRef, {
+                [currentSubject]: increment(unit),
+                completedCardIds: dailyData.completedCardIds
+              });
+            } catch (e) {
+              console.error("更新 Firestore 失敗：", e);
+            }
           }
+        } else {
+          alert("💡 此題今日已計分過，本次驗收只作複習，不重複累加單位！");
         }
 
+        // 清空輸入框並推進指針換下一題
         inputEl.value = "";
+        cardPointers[currentSubject][currentDeviceMode] = (cardPointers[currentSubject][currentDeviceMode] + 1) % list.length;
+        renderCard();
       }
     };
 
-    // 分頁切換
     window.switchSubject = (sub) => {
       currentSubject = sub;
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
       const btn = document.getElementById(`tab-${sub}`);
       if (btn) btn.classList.add("active");
-      window.renderCard();
+      renderCard();
     };
 
-    // 裝置模式切換（觸發重繪）
     window.setDeviceMode = (mode) => {
       currentDeviceMode = mode;
       document.querySelectorAll(".device-btn").forEach(b => b.classList.remove("active"));
       const btn = document.getElementById(`mode-${mode}`);
       if (btn) btn.classList.add("active");
-      window.renderCard();
+      renderCard();
     };
   </script>
 </head>
@@ -552,21 +627,27 @@
   <!-- Card Body -->
   <div class="stage-card">
     <div id="card-body">
-      <span id="card-badge" class="badge badge-neuro">讀取中</span>
-      <h2 id="card-title" class="card-title">載入中...</h2>
-      <p id="card-prompt" class="card-prompt"></p>
+      <div>
+        <span id="card-badge" class="badge badge-neuro">讀取中</span>
+        <h2 id="card-title" class="card-title">載入中...</h2>
+        <div id="card-meta" class="card-meta-info"></div>
+        <p id="card-prompt" class="card-prompt"></p>
+      </div>
       
-      <div id="input-container" class="input-area"></div>
-      
-      <div class="action-row">
-        <button class="btn" onclick="submitProgress()">驗收提交 (<span id="reward-unit">+0.0</span>)</button>
+      <div>
+        <div id="input-container" class="input-area"></div>
+        
+        <div class="action-row">
+          <span style="font-size: 0.8rem; color: var(--text-muted);">答對即切換下一題</span>
+          <button class="btn" onclick="submitProgress()">驗收提交 (<span id="reward-unit">+0.0</span>)</button>
+        </div>
       </div>
     </div>
 
     <!-- 互鎖鎖定畫面 -->
-    <div id="lock-overlay" class="lock-overlay" style="display: none;">
+    <div id="lock-overlay" class="lock-overlay">
       <h3 style="color: var(--locked-red);">🔒 副線已達 0.5 額度上限</h3>
-      <p style="font-size: 0.9rem; color: #cbd5e1; max-width: 400px;">
+      <p style="font-size: 0.9rem; color: #cbd5e1; max-width: 420px;">
         為了避免逃避核心阻力，請先前往<strong>「神經科學」</strong>完成當日 1.0 單位驗收。達成後全天將解鎖語言無限暢讀模式！
       </p>
       <button class="btn" onclick="switchSubject('neuro')">立即前往神經科學 ➔</button>
