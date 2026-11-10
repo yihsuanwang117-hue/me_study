@@ -37,7 +37,7 @@
       gap: 16px;
     }
 
-    /* Auth & Top Bar */
+    /* Top Bar */
     .top-bar {
       display: flex;
       justify-content: space-between;
@@ -246,6 +246,7 @@
       transition: background 0.2s;
     }
     .btn:hover { background: #2563eb; }
+    .btn:disabled { background: #475569; cursor: not-allowed; }
 
     /* Thai Immersion Panel */
     .thai-immersion-box {
@@ -290,7 +291,7 @@
     }
   </style>
 
-  <!-- Firebase Modular CDN -->
+  <!-- Firebase CDN -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
@@ -355,8 +356,7 @@
               title: "動作電位離子動力學與單向傳導機制",
               prompt: "【電腦端驗收 · 英文論述】\n請說明電壓門控鈉通道（Nav）去活化（Inactivation）與活化（Activation）的差異，並深入解釋絕對不應期與相對不應期如何透過分子機制確保動作電位沿軸突「單向（Unidirectional）」傳導。",
               unitReward: 0.5,
-              minChars: 15,
-              reference: "去極化使 m-gate 開啟（活化），約 1ms 內胞內側 h-gate (ball-and-chain 胜肽) 快速閉合堵塞孔道（去活化）。此去活化狀態導致絕對不應期，即使高強度刺激也無法再次引發動作電位；逆向擴散的局部微電流無法興奮剛去極化過的軸突膜，確保興奮嚴格單向向前傳導。"
+              reference: "標準機制：膜去極化引起 m-gate 開啟（活化），約 1ms 內胞內側 h-gate (ball-and-chain 胜肽) 快速閉合堵塞孔道（去活化）。此去活化狀態導致絕對不應期，即使高強度刺激也無法再次引發動作電位；逆向擴散的局部微電流無法興奮剛去極化過的軸突膜，確保興奮嚴格單向向前傳導。"
             }
           ],
           mobile: [
@@ -389,7 +389,6 @@
               title: "從屬子句 (weil) 與動詞後置",
               prompt: "【電腦端驗收 · 骨架組裝】\n請將這兩句合併為一個帶有 'weil' 的句子，注意動詞詞序：\n1. Ich lerne heute fleißig Deutsch.\n2. Ich möchte 2027 in Deutschland studieren.",
               unitReward: 0.2,
-              minChars: 10,
               reference: "Ich lerne heute fleißig Deutsch, weil ich 2027 in Deutschland studieren möchte."
             }
           ],
@@ -414,7 +413,6 @@
               title: "Indefinido 與 Imperfecto 綜合寫作",
               prompt: "【電腦端驗收 · 段落推導】\n請造一個包含「持續背景（Imperfecto）」與「突發動作（Indefinido）」的複式句（至少包含 cuando 或 mientras）。",
               unitReward: 0.2,
-              minChars: 8,
               reference: "Cuando yo dormía, sonó el teléfono. / Mientras estudiábamos, empezó a llover."
             }
           ],
@@ -439,7 +437,6 @@
               title: "性別禮貌尾詞 (ครับ / ค่ะ) 語用差異",
               prompt: "【電腦端驗收 · 語法解析】\n請說明泰語中男性與女性專用禮貌尾詞（ครับ 與 ค่ะ / คะ）的發音聲調差異，以及女性在「陳述句」與「疑問句」中使用 ค่ะ 與 คะ 的規則。",
               unitReward: 0.2,
-              minChars: 12,
               reference: "男性不論句型一律使用 ครับ (kráp，高化調)；女性在陳述句/打招呼使用 ค่ะ (kâ，落調)，而在疑問句/請求句時使用 คะ (ká，高調)。"
             }
           ],
@@ -496,7 +493,6 @@
       completedCardIds: []
     };
 
-    // 泰文單字庫緩存（儲存在 Firestore）
     let thaiVocabSet = new Map();
 
     const authStatusEl = document.getElementById("auth-status");
@@ -604,7 +600,7 @@
       }
     }
 
-    // 渲染卡片核心（掛載 Enter 自動送出監聽）
+    // 渲染卡片
     window.renderCard = function() {
       const neuroUnits = dailyData.neuro || 0;
       const subUnits = (dailyData.german || 0) + (dailyData.spanish || 0);
@@ -616,7 +612,6 @@
       }
       lockOverlayEl.style.display = "none";
 
-      // 泰文模式下展示「沉浸解析抽屜」
       thaiImmersionBoxEl.style.display = currentSubject === "thai" ? "flex" : "none";
 
       const subjectPool = CURRICULUM_DATA.questions[currentSubject] || {};
@@ -644,14 +639,13 @@
       
       const inputContainer = document.getElementById("input-container");
       if (currentDeviceMode === "desktop") {
-        inputContainer.innerHTML = `<textarea id="user-ans" placeholder="【💻 電腦深研】請詳細輸入機制因果推導或論述（需滿 ${item.minChars || 12} 字，Ctrl+Enter 送出）..."></textarea>`;
+        inputContainer.innerHTML = `<textarea id="user-ans" placeholder="【💻 電腦深研】請詳細輸入機制因果推導或論述（AI 教授審查，Ctrl+Enter 送出）..."></textarea>`;
       } else {
         inputContainer.innerHTML = `<input type="text" id="user-ans" placeholder="【📱 手機速記】請在此輸入答案（Enter 送出）..." autocomplete="off">`;
       }
 
       document.getElementById("reward-unit").textContent = isCompletedToday ? "+0.0 (已累計)" : `+${item.unitReward}`;
 
-      // 掛載鍵盤快捷鍵：手機端 Enter 直接送出，電腦端 Ctrl/Cmd + Enter 送出
       const userAnsEl = document.getElementById("user-ans");
       if (userAnsEl) {
         userAnsEl.addEventListener("keydown", (e) => {
@@ -670,9 +664,70 @@
       }
     };
 
+    // 核心：Gemini Flash API 語意與因果鏈審查函數
+    async function evaluateWithGemini(userAns, item) {
+      const apiKey = localStorage.getItem("gemini_api_key");
+      if (!apiKey) {
+        const keyInput = prompt("🔑 首次使用 AI 審查，請貼入您的 Google AI Studio Gemini API Key：\n(金鑰僅儲存在您的瀏覽器本機，安全不外洩)");
+        if (keyInput && keyInput.trim()) {
+          localStorage.setItem("gemini_api_key", keyInput.trim());
+          return evaluateWithGemini(userAns, item);
+        } else {
+          throw new Error("未提供 API Key，無法啟動 AI 教授審查。");
+        }
+      }
+
+      const promptText = `你是一位歐洲頂尖大學神經科學與語言學的教授。請對學生的回答進行嚴格且專業的機制審查。
+
+【題目】：
+${item.prompt}
+
+【標準參考機制/語法因果鏈】：
+${item.reference || "請依據相關領域標準學術知識嚴格審查。"}
+
+【學生回答】：
+${userAns}
+
+【審查規則】：
+1. 嚴禁無意義字元（如 jjjjj、隨意字母拼湊、無邏輯廢話），若發現直接判定 passed: false。
+2. 檢查學生是否真正解釋出「底層機制因果鏈」或「正確語法結構」，不能只是顛倒因果或拼湊術語。
+3. 容許學生用自己的話或英文/中文解釋，只要物理/生物/語法機制本質等價即可給過。
+4. 請「只輸出」標準 JSON 格式，不可有額外文字：
+{
+  "passed": true 或 false,
+  "feedback": "50字內的精準講評，指出正確點或關鍵缺失"
+}`;
+
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: promptText }] }],
+          generationConfig: {
+            temperature: 0.1,
+            responseMimeType: "application/json"
+          }
+        })
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        if (res.status === 400 || res.status === 403) {
+          localStorage.removeItem("gemini_api_key");
+          throw new Error("API Key 無效或過期，請重新設定。");
+        }
+        throw new Error(errData.error?.message || `API 請求失敗 (${res.status})`);
+      }
+
+      const data = await res.json();
+      const outputRaw = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      return JSON.parse(outputRaw);
+    }
+
     // 提交驗收
     window.submitProgress = async function() {
       const inputEl = document.getElementById("user-ans");
+      const submitBtn = document.getElementById("submit-btn");
       if (!inputEl) return;
       const userAns = inputEl.value.trim();
 
@@ -690,29 +745,40 @@
 
       let isPassed = false;
 
+      // 手機端：本地速記比對
       if (currentDeviceMode === "mobile") {
         const cleanAns = userAns.toLowerCase();
         const validAnswers = (item.answers || []).map(a => a.toLowerCase());
         
         if (validAnswers.includes(cleanAns)) {
           isPassed = true;
-          alert(`🎉 回答正確！`);
+          alert(`🎉 回答正確！獲得 +${item.unitReward} 單位進度。`);
         } else {
           alert(`❌ 答案有誤。\n您的回答：${userAns}\n參考正解：${item.answers ? item.answers[0] : "請重新確認"}`);
           return;
         }
       } else {
-        const minLen = item.minChars || 12;
-        if (userAns.length < minLen) {
-          alert(`⚠️ 論述字數不足（目前已輸入 ${userAns.length} 字，需至少 ${minLen} 字）。\n請進一步補充完整機制！`);
-          return;
-        }
+        // 電腦端：呼叫 Gemini 1.5 Flash 進行整句因果審查
+        try {
+          submitBtn.disabled = true;
+          submitBtn.textContent = "🤖 審查因果鏈中...";
 
-        isPassed = true;
-        const feedback = item.reference 
-          ? `\n\n【標準因果機制對照】：\n${item.reference}` 
-          : "";
-        alert(`✅ 電腦深研驗收通過！${feedback}`);
+          const evalResult = await evaluateWithGemini(userAns, item);
+
+          if (evalResult.passed) {
+            isPassed = true;
+            alert(`✅ AI 教授審查通過！(+${item.unitReward} 單位)\n\n【講評】：${evalResult.feedback}`);
+          } else {
+            alert(`❌ 審查未通過！\n\n【AI 診斷漏洞】：${evalResult.feedback}\n\n請依據機制因果補充後重新提交！`);
+            return;
+          }
+        } catch (err) {
+          alert("⚠️ AI 審查過程發生錯誤：" + err.message);
+          return;
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "驗收提交";
+        }
       }
 
       if (isPassed) {
@@ -807,7 +873,7 @@
       }
     };
 
-    // 泰文沉浸解析器（比對個人詞庫並標註已學單字）
+    // 泰文句子解析
     window.parseThaiSentence = async function() {
       const rawText = document.getElementById("thai-sentence-json").value.trim();
       if (!rawText) return alert("請先貼上句子解析 JSON！");
@@ -817,7 +883,6 @@
         const displayEl = document.getElementById("thai-parsed-display");
         displayEl.innerHTML = "";
 
-        // 渲染完整句子與語法提示
         const infoDiv = document.createElement("div");
         infoDiv.innerHTML = `
           <div style="font-size: 1.05rem; font-weight: bold; color: #fff;">${parsed.sentence.raw}</div>
@@ -833,7 +898,6 @@
         tokenContainer.style.flexWrap = "wrap";
         tokenContainer.style.marginTop = "8px";
 
-        // 逐字標記比對
         (parsed.tokens || []).forEach(tk => {
           const isLearned = thaiVocabSet.has(tk.th);
           const btn = document.createElement("div");
@@ -872,6 +936,21 @@
 
     window.toggleLearningMap = () => mapPanelEl.classList.toggle("show");
 
+    // 設定或重設 Gemini API Key
+    window.configureApiKey = () => {
+      const currentKey = localStorage.getItem("gemini_api_key") || "";
+      const newKey = prompt("🔑 請輸入 Google AI Studio 的 Gemini API Key (留空可清除)：", currentKey);
+      if (newKey !== null) {
+        if (newKey.trim()) {
+          localStorage.setItem("gemini_api_key", newKey.trim());
+          alert("✅ Gemini API Key 已儲存於本機！電腦深研將啟動 AI 即時審查。");
+        } else {
+          localStorage.removeItem("gemini_api_key");
+          alert("ℹ️ 已清除 API Key。");
+        }
+      }
+    };
+
     window.switchSubject = (sub) => {
       currentSubject = sub;
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
@@ -900,6 +979,7 @@
       <span class="sync-status"></span><span id="auth-status">連線中...</span>
     </div>
     <div class="top-actions">
+      <button class="action-btn" onclick="configureApiKey()">🔑 AI 設定</button>
       <button class="action-btn" onclick="toggleLearningMap()">🗺️ 學習地圖與匯入</button>
       <div class="device-switcher">
         <button id="mode-desktop" class="device-btn active" onclick="setDeviceMode('desktop')">💻 電腦深研</button>
@@ -970,7 +1050,7 @@
         
         <div class="action-row">
           <span style="font-size: 0.8rem; color: var(--text-muted);">Enter 或 Ctrl+Enter 快速送出</span>
-          <button class="btn" onclick="submitProgress()">驗收提交 (<span id="reward-unit">+0.0</span>)</button>
+          <button id="submit-btn" class="btn" onclick="submitProgress()">驗收提交 (<span id="reward-unit">+0.0</span>)</button>
         </div>
       </div>
     </div>
@@ -985,7 +1065,7 @@
     </div>
   </div>
 
-  <!-- 泰文專屬：語境浸潤解析室與個人單字庫 (切換到泰文時顯示) -->
+  <!-- 泰文專屬：語境浸潤解析室與個人單字庫 -->
   <div id="thai-immersion-box" class="thai-immersion-box" style="display: none;">
     <div style="display: flex; justify-content: space-between; align-items: center;">
       <span style="font-size: 0.9rem; font-weight: bold; color: #f472b6;">🇹🇭 泰文沉浸解析室 (影片字幕 / 感興趣句子)</span>
