@@ -698,59 +698,22 @@ ${userAns}
   "feedback": "50字內的精準講評，指出正確點或關鍵缺失"
 }`;
 
-   // 1. 優先嘗試官方支援度最廣的模型正式名稱
-      const candidateModels = [
-        "gemini-1.5-flash-latest",
-        "gemini-1.5-flash-001",
-        "gemini-1.5-flash-002",
-        "gemini-2.0-flash-exp"
-      ];
-
-      let res = null;
-      let lastErrMsg = "";
-
-      for (const m of candidateModels) {
-        try {
-          res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${apiKey}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: promptText }] }],
-              generationConfig: {
-                temperature: 0.1,
-                responseMimeType: "application/json"
-              }
-            })
-          });
-
-          if (res.ok) break;
-          const errData = await res.json().catch(() => ({}));
-          lastErrMsg = errData.error?.message || `HTTP ${res.status}`;
-        } catch (e) {
-          lastErrMsg = e.message;
-        }
-      }
-
-      // 2. 如果依然全數 404，代表 API Key 權限或專案 API 未啟用
-      if (!res || !res.ok) {
-        // 主動嘗試向 Google 查詢該 Key 到底有哪些可用模型
-        try {
-          const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-          const listData = await listRes.json();
-          if (listData.models) {
-            const availableNames = listData.models
-              .filter(item => item.supportedGenerationMethods?.includes("generateContent"))
-              .map(item => item.name.replace("models/", ""))
-              .slice(0, 3)
-              .join(", ");
-            throw new Error(`您的 Key 支援的模型為：[${availableNames}]，請重新確認名稱。`);
-          } else if (listData.error) {
-            throw new Error(`金鑰錯誤：${listData.error.message}`);
+ // 直接呼叫經診斷可用的 gemini-2.5-flash 模型
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: promptText }] }],
+          generationConfig: {
+            temperature: 0.1,
+            responseMimeType: "application/json"
           }
-        } catch (inspectErr) {
-          throw new Error(inspectErr.message || `連線失敗：${lastErrMsg}`);
-        }
-        throw new Error(`AI 端點連線失敗：${lastErrMsg}`);
+        })
+      });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.error?.message || `HTTP ${res.status}`);
       }
 
       const data = await res.json();
