@@ -923,6 +923,7 @@
     };
 
 // 渲染階層式學習地圖（自動剃除無資料章節與空課本）
+ // 渲染階層式學習地圖（以真實題庫為準，動態聚合同步）
     function renderLearningMap() {
       bookListEl.innerHTML = "";
 
@@ -937,78 +938,82 @@
         const subPool = CURRICULUM_DATA.questions[sub.key] || {};
         const allQuestions = [...(subPool.desktop || []), ...(subPool.mobile || [])];
 
-        // 統計每個章節底下的有效題目數
-        const chapterCountMap = new Map();
-        allQuestions.forEach(q => {
-          let chName = q.chapter;
-          if (!chName && q.bookRef) {
-            const parts = q.bookRef.split("·");
-            chName = parts.length > 1 ? parts[1].trim() : parts[0].trim();
-          }
-          if (chName) {
-            chapterCountMap.set(chName, (chapterCountMap.get(chName) || 0) + 1);
-          }
-        });
+        // 1. 動態建立「課本 ➔ 章節 ➔ 題目數」樹狀結構
+        const booksMap = new Map();
 
-        // 篩選出該學科下「具有有效題目章節」的課本
-        const validBooks = (CURRICULUM_DATA.books || []).filter(b => {
-          if (b.subject !== sub.key) return false;
-          // 只保留底下有題目的章節
-          const activeChapters = (b.chapters || []).filter(ch => (chapterCountMap.get(ch) || 0) > 0);
-          return activeChapters.length > 0;
+        allQuestions.forEach(q => {
+          // 解析課本名與章節名
+          let bookName = "主要教材";
+          let chapName = q.chapter;
+
+          if (q.bookRef) {
+            const parts = q.bookRef.split("·");
+            if (parts.length > 1) {
+              bookName = parts[0].trim();
+              if (!chapName) chapName = parts[1].trim();
+            } else {
+              bookName = q.bookRef.trim();
+            }
+          }
+          if (!chapName) chapName = "核心重點題目";
+
+          if (!booksMap.has(bookName)) {
+            booksMap.set(bookName, new Map());
+          }
+          const chMap = booksMap.get(bookName);
+          chMap.set(chapName, (chMap.get(chapName) || 0) + 1);
         });
 
         // 建立學科摺疊面板（第一層）
         const subAccordion = document.createElement("div");
         subAccordion.className = "map-subject-accordion";
 
-        const totalQuestionsInSub = allQuestions.length;
+        const totalQ = allQuestions.length;
+        const bookCount = booksMap.size;
+
         subAccordion.innerHTML = `
           <div class="map-subject-header" onclick="this.nextElementSibling.classList.toggle('show')">
             <span>${sub.name}</span>
-            <span style="font-size:0.75rem; color:#94a3b8;">${validBooks.length} 本教材 · ${totalQuestionsInSub} 道題目 ▾</span>
+            <span style="font-size:0.75rem; color:#94a3b8;">${bookCount} 本教材 · ${totalQ} 道題目 ▾</span>
           </div>
           <div class="map-subject-body"></div>
         `;
 
         const subBodyEl = subAccordion.querySelector(".map-subject-body");
 
-        if (validBooks.length === 0) {
-          subBodyEl.innerHTML = `<div style="font-size:0.8rem; color:#64748b; padding:4px;">尚無匯入題目，請使用下方匯入題庫。</div>`;
+        if (totalQ === 0) {
+          subBodyEl.innerHTML = `<div style="font-size:0.8rem; color:#64748b; padding:4px;">尚無題目，請使用下方匯入。</div>`;
         } else {
-          // 建立課本（第二層）
-          validBooks.forEach((b, bIdx) => {
-            // 過濾並剔除無題目章節
-            const activeChapters = (b.chapters || []).filter(ch => (chapterCountMap.get(ch) || 0) > 0);
-
+          let bIdx = 0;
+          booksMap.forEach((chMap, bTitle) => {
+            bIdx++;
             const bookDiv = document.createElement("div");
             bookDiv.style.display = "flex";
             bookDiv.style.flexDirection = "column";
 
-            const bookId = `sub_${sub.key}_book_${bIdx}`;
+            const bookId = `dyn_sub_${sub.key}_${bIdx}`;
+            const chapterCount = chMap.size;
+
             bookDiv.innerHTML = `
               <div class="book-card-header" onclick="document.getElementById('${bookId}').classList.toggle('show')">
-                <span style="font-size:0.85rem; font-weight:bold; color:#f8fafc;">📖 ${b.title}</span>
-                <span style="font-size:0.75rem; color:#93c5fd;">${activeChapters.length} 個有效章節 ▾</span>
+                <span style="font-size:0.85rem; font-weight:bold; color:#f8fafc;">📖 ${bTitle}</span>
+                <span style="font-size:0.75rem; color:#93c5fd;">${chapterCount} 個章節 ▾</span>
               </div>
               <div id="${bookId}" class="book-card-body">
-                <div style="font-size:0.75rem; color:#94a3b8;">版本：${b.version}</div>
                 <div class="chapter-tags" id="${bookId}_tags"></div>
                 <div style="display:flex; justify-content:flex-end; margin-top:4px;">
-                  <button class="tool-btn" style="padding:2px 8px; font-size:0.7rem;" onclick="copyChapterPrompt('${b.title}')">📋 複製出題 Prompt</button>
+                  <button class="tool-btn" style="padding:2px 8px; font-size:0.7rem;" onclick="copyChapterPrompt('${bTitle}')">📋 複製出題 Prompt</button>
                 </div>
               </div>
             `;
 
             const tagsContainer = bookDiv.querySelector(`#${bookId}_tags`);
-            // 建立章節標籤（第三層）
-            activeChapters.forEach(ch => {
-              const count = chapterCountMap.get(ch) || 0;
+            chMap.forEach((count, chTitle) => {
               const badge = document.createElement("span");
               badge.className = "chapter-badge";
               badge.style.cursor = "pointer";
-              badge.innerHTML = `🎯 ${ch} <strong style="color:#38bdf8;">(${count}題)</strong>`;
-              badge.onclick = () => selectSpecificChapter(ch, b.subject);
+              badge.innerHTML = `🎯 ${chTitle} <strong style="color:#38bdf8;">(${count}題)</strong>`;
+              badge.onclick = () => selectSpecificChapter(chTitle, sub.key);
               tagsContainer.appendChild(badge);
             });
 
