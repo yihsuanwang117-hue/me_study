@@ -785,67 +785,142 @@
 
     // 動態填充電腦/手機範圍篩選下拉選單
 // 動態填充電腦/手機範圍篩選下拉選單（自動智慧相容 bookRef 與 chapter 欄位）
-    function populateFilters() {
+  let isMultiSelectMode = false;
+    let selectedChaptersSet = new Set(); // 存放多選的章節清單
+
+    // 取得當前科目的全量題目（並給予自動補齊容錯）
+    function getCurrentSubjectAllQuestions() {
       const subjectPool = CURRICULUM_DATA.questions[currentSubject] || {};
-      const allQuestions = [...(subjectPool.desktop || []), ...(subjectPool.mobile || [])];
+      const allQ = [...(subjectPool.desktop || []), ...(subjectPool.mobile || [])];
 
-      const chapters = new Set();
-      const lenses = new Set();
-
-      // 1. 從題目中提取章節與學科視角
-      allQuestions.forEach(q => {
-        let chapName = q.chapter;
-        // 若沒有獨立 chapter 欄位，自動從 bookRef (如 "... · Chapter 7") 解析
-        if (!chapName && q.bookRef) {
+      // 自動修復：若無 chapter 則由 bookRef 解析；若無 lens 依關鍵字模糊標記
+      allQ.forEach(q => {
+        if (!q.chapter && q.bookRef) {
           const parts = q.bookRef.split("·");
-          if (parts.length > 1) {
-            chapName = parts[1].trim();
+          q.chapter = parts.length > 1 ? parts[1].trim() : parts[0].trim();
+        }
+        if (!q.lens) {
+          const txt = (q.title + " " + q.prompt).toLowerCase();
+          if (txt.includes("電位") || txt.includes("離子") || txt.includes("電阻") || txt.includes("nernst") || txt.includes("導納")) {
+            q.lens = "🧲 生物物理/電生理";
+          } else if (txt.includes("受體") || txt.includes("蛋白") || txt.includes("遞質") || txt.includes("nmda")) {
+            q.lens = "🧬 生化/分子機制";
           } else {
-            chapName = q.bookRef.trim();
+            q.lens = "🧠 迴路/突觸整合";
           }
         }
-        if (chapName) {
-          q.chapter = chapName; // 自動回填補齊，確保後續過濾生效
-          chapters.add(chapName);
-        }
-
-        if (q.lens) lenses.add(q.lens);
       });
-
-      // 2. 備援：若題目尚未解析出章節，從 CURRICULUM_DATA.books 目錄補充
-      (CURRICULUM_DATA.books || []).forEach(b => {
-        if (b.subject === currentSubject && Array.isArray(b.chapters)) {
-          b.chapters.forEach(ch => chapters.add(ch));
-        }
-      });
-
-      const currentChapVal = chapterFilterEl.value;
-      const currentLensVal = lensFilterEl.value;
-
-      chapterFilterEl.innerHTML = '<option value="ALL">全部章節 (綜合輪播)</option>';
-      chapters.forEach(ch => {
-        chapterFilterEl.innerHTML += `<option value="${ch}">📖 ${ch}</option>`;
-      });
-
-      lensFilterEl.innerHTML = '<option value="ALL">全學科視角 (不拘)</option>';
-      if (lenses.size > 0) {
-        lenses.forEach(l => {
-          lensFilterEl.innerHTML += `<option value="${l}">${l}</option>`;
-        });
-      } else {
-        // 預設神經科學常用視角
-        if (currentSubject === "neuro") {
-          lensFilterEl.innerHTML += `
-            <option value="🧲 生物物理/電生理">🧲 生物物理/電生理</option>
-            <option value="🧬 分子/受體">🧬 分子/受體</option>
-            <option value="🧠 迴路/突觸整合">🧠 迴路/突觸整合</option>
-          `;
-        }
-      }
-
-      if (chapters.has(currentChapVal)) chapterFilterEl.value = currentChapVal;
-      if (lenses.has(currentLensVal)) lensFilterEl.value = currentLensVal;
+      return allQ;
     }
+
+    // 動態雙向連動：更新選單內容
+    function updateFilterDropdowns() {
+      const allQ = getCurrentSubjectAllQuestions();
+      const currentChap = chapterFilterEl.value || "ALL";
+      const currentLens = lensFilterEl.value || "ALL";
+
+      // 1. 根據目前選定的 lens，篩選出真正有題目的章節清單
+      const availableChapters = new Set();
+      allQ.forEach(q => {
+        if (currentLens === "ALL" || q.lens === currentLens) {
+          if (q.chapter) availableChapters.add(q.chapter);
+        }
+      });
+
+      // 2. 根據目前選定的 chapter，篩選出真正有題目的學科視角清單
+      const availableLenses = new Set();
+      allQ.forEach(q => {
+        if (currentChap === "ALL" || q.chapter === currentChap) {
+          if (q.lens) availableLenses.add(q.lens);
+        }
+      });
+
+      // 重新渲染章節選單
+      chapterFilterEl.innerHTML = '<option value="ALL">全部章節 (綜合輪播)</option>';
+      availableChapters.forEach(ch => {
+        const isSel = (ch === currentChap) ? "selected" : "";
+        chapterFilterEl.innerHTML += `<option value="${ch}" ${isSel}>📖 ${ch}</option>`;
+      });
+
+      // 重新渲染視角選單（自動動態擴充，例如匯入統計學後會自動出現）
+      lensFilterEl.innerHTML = '<option value="ALL">全學科視角 (不拘)</option>';
+      availableLenses.forEach(l => {
+        const isSel = (l === currentLens) ? "selected" : "";
+        lensFilterEl.innerHTML += `<option value="${l}" ${isSel}>${l}</option>`;
+      });
+
+      // 渲染多選核取方塊
+      renderMultiSelectCheckboxes(allQ);
+    }
+
+    function renderMultiSelectCheckboxes(allQ) {
+      const container = document.getElementById("multiselect-checkboxes");
+      const allChapters = Array.from(new Set(allQ.map(q => q.chapter).filter(Boolean)));
+
+      container.innerHTML = "";
+      allChapters.forEach(ch => {
+        const isChecked = selectedChaptersSet.has(ch) ? "checked" : "";
+        const label = document.createElement("label");
+        label.style.fontSize = "0.75rem";
+        label.style.background = "#1e293b";
+        label.style.padding = "3px 8px";
+        label.style.borderRadius = "4px";
+        label.style.cursor = "pointer";
+        label.style.display = "inline-flex";
+        label.style.alignItems = "center";
+        label.style.gap = "4px";
+        label.innerHTML = `<input type="checkbox" value="${ch}" ${isChecked} onchange="onCheckboxToggled(this)"> ${ch}`;
+        container.appendChild(label);
+      });
+    }
+
+    window.toggleMultiSelectMode = function() {
+      isMultiSelectMode = !isMultiSelectMode;
+      const drawer = document.getElementById("multiselect-drawer");
+      const btn = document.getElementById("toggle-multiselect-btn");
+      if (isMultiSelectMode) {
+        drawer.style.display = "flex";
+        btn.textContent = "✕ 關閉複選模式";
+        btn.style.background = "#e11d48";
+      } else {
+        drawer.style.display = "none";
+        btn.textContent = "☑️ 開啟多章節複選";
+        btn.style.background = "#334155";
+      }
+      currentActiveItem = null;
+      renderCard();
+    };
+
+    window.onCheckboxToggled = function(cb) {
+      if (cb.checked) {
+        selectedChaptersSet.add(cb.value);
+      } else {
+        selectedChaptersSet.delete(cb.value);
+      }
+      currentActiveItem = null;
+      renderCard();
+    };
+
+    window.clearMultiSelect = function() {
+      selectedChaptersSet.clear();
+      document.querySelectorAll("#multiselect-checkboxes input").forEach(cb => cb.checked = false);
+      currentActiveItem = null;
+      renderCard();
+    };
+
+    window.onChapterFilterChange = function() {
+      // 點擊章節時，更新視角選單使其只保留該章節擁有的視角
+      updateFilterDropdowns();
+      currentActiveItem = null;
+      renderCard();
+    };
+
+    window.onLensFilterChange = function() {
+      // 點擊視角時，更新章節選單使其只保留包含該視角的章節
+      updateFilterDropdowns();
+      currentActiveItem = null;
+      renderCard();
+    };
 
 // 渲染階層式學習地圖（自動剃除無資料章節與空課本）
     function renderLearningMap() {
@@ -1033,12 +1108,21 @@
       const fullList = subjectPool[currentDeviceMode] || [];
 
       // 依據下拉選單過濾範圍（支援大考衝刺指定單章或學科視角）
-      const selectedChap = chapterFilterEl.value;
-      const selectedLens = lensFilterEl.value;
+    const selectedChap = chapterFilterEl.value || "ALL";
+      const selectedLens = lensFilterEl.value || "ALL";
 
       currentFilteredList = fullList.filter(q => {
-        const matchChap = (selectedChap === "ALL") || (q.chapter === selectedChap);
+        // 多選模式下：判斷是否在勾選集合中（若未勾選任何項目則視為全選）
+        let matchChap = true;
+        if (isMultiSelectMode && selectedChaptersSet.size > 0) {
+          matchChap = selectedChaptersSet.has(q.chapter);
+        } else if (selectedChap !== "ALL") {
+          matchChap = (q.chapter === selectedChap);
+        }
+
+        // 學科視角篩選
         const matchLens = (selectedLens === "ALL") || (q.lens === selectedLens);
+
         return matchChap && matchLens;
       });
 
@@ -1622,14 +1706,143 @@ ${userAns}
       renderCard();
     };
 
-    window.onFilterChange = function() {
+   let isMultiSelectMode = false;
+    let selectedChaptersSet = new Set(); // 存放多選章節
+
+    // 取得當前科目所有題目（具備自動修復欄位缺漏）
+    function getCurrentSubjectAllQuestions() {
+      const subjectPool = CURRICULUM_DATA.questions[currentSubject] || {};
+      const allQ = [...(subjectPool.desktop || []), ...(subjectPool.mobile || [])];
+
+      allQ.forEach(q => {
+        if (!q.chapter && q.bookRef) {
+          const parts = q.bookRef.split("·");
+          q.chapter = parts.length > 1 ? parts[1].trim() : parts[0].trim();
+        }
+        if (!q.lens) {
+          const txt = (q.title + " " + q.prompt).toLowerCase();
+          if (txt.includes("電位") || txt.includes("離子") || txt.includes("電阻") || txt.includes("nernst") || txt.includes("導納") || txt.includes("被動")) {
+            q.lens = "🧲 生物物理/電生理";
+          } else if (txt.includes("受體") || txt.includes("蛋白") || txt.includes("遞質") || txt.includes("nmda")) {
+            q.lens = "🧬 分子/受體";
+          } else {
+            q.lens = "🧠 迴路/突觸整合";
+          }
+        }
+      });
+      return allQ;
+    }
+
+    // 雙向連動：更新章節與學科視角下拉選單
+    function updateFilterDropdowns() {
+      const allQ = getCurrentSubjectAllQuestions();
+      const currentChap = chapterFilterEl.value || "ALL";
+      const currentLens = lensFilterEl.value || "ALL";
+
+      // 1. 根據目前選定的視角，篩選出真正有題目的章節
+      const availableChapters = new Set();
+      allQ.forEach(q => {
+        if (currentLens === "ALL" || q.lens === currentLens) {
+          if (q.chapter) availableChapters.add(q.chapter);
+        }
+      });
+
+      // 2. 根據目前選定的章節，篩選出真正有題目的學科視角
+      const availableLenses = new Set();
+      allQ.forEach(q => {
+        if (currentChap === "ALL" || q.chapter === currentChap) {
+          if (q.lens) availableLenses.add(q.lens);
+        }
+      });
+
+      // 渲染章節下拉選單
+      chapterFilterEl.innerHTML = '<option value="ALL">全部章節 (綜合輪播)</option>';
+      availableChapters.forEach(ch => {
+        const isSel = (ch === currentChap) ? "selected" : "";
+        chapterFilterEl.innerHTML += `<option value="${ch}" ${isSel}>📖 ${ch}</option>`;
+      });
+
+      // 渲染視角下拉選單（自動長出匯入的新學科標籤）
+      lensFilterEl.innerHTML = '<option value="ALL">全學科視角 (不拘)</option>';
+      availableLenses.forEach(l => {
+        const isSel = (l === currentLens) ? "selected" : "";
+        lensFilterEl.innerHTML += `<option value="${l}" ${isSel}>${l}</option>`;
+      });
+
+      // 渲染多選核取方塊
+      renderMultiSelectCheckboxes(allQ);
+    }
+
+    function renderMultiSelectCheckboxes(allQ) {
+      const container = document.getElementById("multiselect-checkboxes");
+      if (!container) return;
+      const allChapters = Array.from(new Set(allQ.map(q => q.chapter).filter(Boolean)));
+
+      container.innerHTML = "";
+      allChapters.forEach(ch => {
+        const isChecked = selectedChaptersSet.has(ch) ? "checked" : "";
+        const label = document.createElement("label");
+        label.style.fontSize = "0.75rem";
+        label.style.background = "#1e293b";
+        label.style.padding = "3px 8px";
+        label.style.borderRadius = "4px";
+        label.style.cursor = "pointer";
+        label.style.display = "inline-flex";
+        label.style.alignItems = "center";
+        label.style.gap = "4px";
+        label.innerHTML = `<input type="checkbox" value="${ch}" ${isChecked} onchange="onCheckboxToggled(this)"> ${ch}`;
+        container.appendChild(label);
+      });
+    }
+
+    window.toggleMultiSelectMode = function() {
+      isMultiSelectMode = !isMultiSelectMode;
+      const drawer = document.getElementById("multiselect-drawer");
+      const btn = document.getElementById("toggle-multiselect-btn");
+      if (isMultiSelectMode) {
+        drawer.style.display = "flex";
+        btn.textContent = "✕ 關閉複選模式";
+        btn.style.background = "#e11d48";
+      } else {
+        drawer.style.display = "none";
+        btn.textContent = "☑️ 開啟多章節複選";
+        btn.style.background = "#334155";
+      }
       currentActiveItem = null;
       renderCard();
     };
 
-    populateFilters();
-    renderLearningMap();
-    updatePomoDisplay();
+    window.onCheckboxToggled = function(cb) {
+      if (cb.checked) {
+        selectedChaptersSet.add(cb.value);
+      } else {
+        selectedChaptersSet.delete(cb.value);
+      }
+      currentActiveItem = null;
+      renderCard();
+    };
+
+    window.clearMultiSelect = function() {
+      selectedChaptersSet.clear();
+      document.querySelectorAll("#multiselect-checkboxes input").forEach(cb => cb.checked = false);
+      currentActiveItem = null;
+      renderCard();
+    };
+
+    window.onChapterFilterChange = function() {
+      updateFilterDropdowns();
+      currentActiveItem = null;
+      renderCard();
+    };
+
+    window.onLensFilterChange = function() {
+      updateFilterDropdowns();
+      currentActiveItem = null;
+      renderCard();
+    };
+
+    // 啟動初始化更新選單
+    updateFilterDropdowns();
   </script>
 </head>
 <body>
@@ -1668,14 +1881,29 @@ ${userAns}
   </div>
 
   <!-- 大考衝刺範圍與學科視角過濾條 (Scope Filter) -->
+ <!-- 大考衝刺範圍與學科視角過濾條 (支援雙向連動與多選) -->
   <div class="filter-bar">
     <div class="filter-header">
-      <span>🎯 複習範圍控制（大考專案 / 章節專攻）：</span>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span>🎯 複習範圍控制：</span>
+        <button id="toggle-multiselect-btn" class="tool-btn" style="padding:2px 8px;" onclick="toggleMultiSelectMode()">☑️ 開啟多章節複選</button>
+      </div>
       <button class="tool-btn" style="padding:2px 8px;" onclick="skipToNextQuestion()">換下一題 ➔</button>
     </div>
-    <div class="scope-selects">
-      <select id="chapter-filter" class="scope-select" onchange="onFilterChange()"></select>
-      <select id="lens-filter" class="scope-select" onchange="onFilterChange()"></select>
+
+    <!-- 單選聯動下拉選單 -->
+    <div id="single-select-row" class="scope-selects">
+      <select id="chapter-filter" class="scope-select" onchange="onChapterFilterChange()"></select>
+      <select id="lens-filter" class="scope-select" onchange="onLensFilterChange()"></select>
+    </div>
+
+    <!-- 多選標籤抽屜（預設收合） -->
+    <div id="multiselect-drawer" style="display:none; flex-direction:column; gap:6px; background:#0f172a; padding:10px; border-radius:8px; border:1px solid #334155;">
+      <div style="font-size:0.75rem; color:#93c5fd; display:flex; justify-content:space-between;">
+        <span>勾選大考衝刺範圍（可複選多個章節）：</span>
+        <span style="cursor:pointer; color:#f43f5e;" onclick="clearMultiSelect()">重設全選</span>
+      </div>
+      <div id="multiselect-checkboxes" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
     </div>
   </div>
 
