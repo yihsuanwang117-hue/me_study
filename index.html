@@ -705,9 +705,22 @@
     let pomoTimerInterval = null;
     let isPomoRunning = false;
 
+// 1. 本地快取保底：網頁一開立刻先讀取本地記憶，杜絕任何網路延遲空白
+    const cachedCurriculum = localStorage.getItem("local_curriculum_cache");
+    if (cachedCurriculum) {
+      try {
+        const parsed = JSON.parse(cachedCurriculum);
+        if (parsed.books) CURRICULUM_DATA.books = parsed.books;
+        if (parsed.questions) CURRICULUM_DATA.questions = parsed.questions;
+      } catch (e) {
+        console.warn("讀取本地快取失敗", e);
+      }
+    }
+
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         currentUser = user;
+        localStorage.setItem("saved_user_uid", user.uid);
         authStatusEl.textContent = `已同步 (ID: ${user.uid.slice(0, 6)})`;
         listenToDailyLog(user.uid);
         listenToCustomCurriculum(user.uid);
@@ -718,35 +731,24 @@
       }
     });
 
-    function listenToDailyLog(uid) {
-      const docRef = doc(db, `users/${uid}/daily_logs/${todayDate}`);
-      onSnapshot(docRef, (docSnap) => {
-        if (docSnap.exists()) {
-          const remote = docSnap.data();
-          dailyData.neuro = remote.neuro || 0;
-          dailyData.german = remote.german || 0;
-          dailyData.spanish = remote.spanish || 0;
-          dailyData.thai = remote.thai || 0;
-          dailyData.pomoCount = remote.pomoCount || 0;
-          dailyData.completedCardIds = Array.isArray(remote.completedCardIds) ? remote.completedCardIds : [];
-        } else {
-          setDoc(docRef, { neuro: 0, german: 0, spanish: 0, thai: 0, completedCardIds: [], pomoCount: 0 });
-        }
-        renderDashboard();
-        renderCard();
-      });
-    }
-
-function listenToCustomCurriculum(uid) {
+    function listenToCustomCurriculum(uid) {
       const docRef = doc(db, `users/${uid}/meta/curriculum`);
       onSnapshot(docRef, (docSnap) => {
         if (docSnap.exists()) {
           const custom = docSnap.data();
           if (custom.books) CURRICULUM_DATA.books = custom.books;
           if (custom.questions) CURRICULUM_DATA.questions = custom.questions;
+          // 同步寫入本機快取，下次離線或連線慢也能瞬間載入
+          localStorage.setItem("local_curriculum_cache", JSON.stringify(CURRICULUM_DATA));
+        } else {
+          // 如果雲端為空但本地有資料，自動反向回填備份至雲端，防止被空檔案覆蓋
+          if (cachedCurriculum) {
+            setDoc(docRef, CURRICULUM_DATA);
+          }
         }
         updateFilterDropdowns();
         renderLearningMap();
+        currentActiveItem = null; // 重置指標確保載入新題目
         renderCard();
       });
     }
@@ -1577,6 +1579,7 @@ ${userAns}
         if (currentUser) {
           const docRef = doc(db, `users/${currentUser.uid}/meta/curriculum`);
           await setDoc(docRef, CURRICULUM_DATA);
+          localStorage.setItem("local_curriculum_cache", JSON.stringify(CURRICULUM_DATA));
         }
 
         alert(`🎉 成功更新教材【${data.book.title}】！\n章節已自動歸併至該課本目錄下。`);
