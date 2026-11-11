@@ -16,6 +16,9 @@
       --accent-spanish: #10b981;
       --accent-thai: #ec4899;
       --locked-red: #ef4444;
+      --mastery-red: #ef4444;
+      --mastery-yellow: #f59e0b;
+      --mastery-green: #10b981;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -31,7 +34,7 @@
 
     .container {
       width: 100%;
-      max-width: 760px;
+      max-width: 820px;
       display: flex;
       flex-direction: column;
       gap: 16px;
@@ -46,11 +49,13 @@
       padding: 12px 16px;
       border-radius: 12px;
       border: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 10px;
     }
     .user-info { font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; }
     .sync-status { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; margin-right: 6px; }
 
-    .top-actions { display: flex; gap: 8px; align-items: center; }
+    .top-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
     .action-btn {
       background: #334155;
       color: #fff;
@@ -87,6 +92,32 @@
       background: var(--border);
       color: var(--text);
     }
+
+    /* Pomodoro Timer Bar */
+    .pomo-panel {
+      background: #111827;
+      border: 1px solid #374151;
+      border-radius: 12px;
+      padding: 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .pomo-info { display: flex; align-items: center; gap: 10px; font-weight: bold; }
+    .pomo-time { font-family: monospace; font-size: 1.3rem; color: #f43f5e; }
+    .pomo-controls { display: flex; gap: 6px; align-items: center; }
+    .pomo-pill {
+      background: #1f2937;
+      border: 1px solid #374151;
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+    .pomo-pill.active { background: #e11d48; color: #fff; border-color: #f43f5e; font-weight: bold; }
 
     /* Learning Map Panel */
     .map-panel {
@@ -143,6 +174,28 @@
       resize: vertical;
     }
 
+    /* Filter Drawer for Scope (Ch.8~12, tags) */
+    .filter-bar {
+      background: #1e293b;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .filter-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: #94a3b8; }
+    .scope-selects { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .scope-select {
+      background: #0f172a;
+      color: #fff;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 0.8rem;
+      outline: none;
+    }
+
     /* Dashboard */
     .dashboard {
       background: var(--card-bg);
@@ -190,33 +243,52 @@
       border-radius: 16px;
       border: 1px solid var(--border);
       padding: 24px;
-      min-height: 300px;
+      min-height: 320px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       position: relative;
     }
+    .card-top-tags { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
     .badge {
       display: inline-block;
-      padding: 4px 8px;
+      padding: 3px 8px;
       border-radius: 6px;
       font-size: 0.75rem;
       font-weight: bold;
       text-transform: uppercase;
-      margin-bottom: 8px;
     }
     .badge-neuro { background: rgba(56, 189, 248, 0.2); color: var(--accent-neuro); }
     .badge-german { background: rgba(245, 158, 11, 0.2); color: var(--accent-german); }
     .badge-spanish { background: rgba(16, 185, 129, 0.2); color: var(--accent-spanish); }
     .badge-thai { background: rgba(236, 72, 153, 0.2); color: var(--accent-thai); }
 
+    .mastery-pill {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-weight: bold;
+    }
+    .mastery-low { background: rgba(239, 68, 68, 0.2); color: var(--mastery-red); border: 1px solid var(--mastery-red); }
+    .mastery-mid { background: rgba(245, 158, 11, 0.2); color: var(--mastery-yellow); border: 1px solid var(--mastery-yellow); }
+    .mastery-high { background: rgba(16, 185, 129, 0.2); color: var(--mastery-green); border: 1px solid var(--mastery-green); }
+
+    .lens-tag {
+      background: #0f172a;
+      border: 1px solid #475569;
+      color: #94a3b8;
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
     .card-title { font-size: 1.15rem; margin-bottom: 6px; }
     .card-source-tag { font-size: 0.75rem; color: #38bdf8; margin-bottom: 8px; font-weight: 500; }
     .card-meta-info { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; }
     .card-prompt { font-size: 0.95rem; color: #cbd5e1; margin-bottom: 16px; white-space: pre-line; line-height: 1.6; }
 
-    /* Inputs */
-    .input-area { margin-bottom: 16px; }
+    /* Inputs & Scaffolding */
+    .input-area { margin-bottom: 16px; position: relative; }
     textarea, input[type="text"] {
       width: 100%;
       background: #0f172a;
@@ -229,11 +301,32 @@
     }
     textarea { height: 120px; resize: vertical; }
 
+    .input-tools {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .tool-btn {
+      background: #1e293b;
+      border: 1px solid #475569;
+      color: #cbd5e1;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .tool-btn:hover { background: #334155; }
+
     .action-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 10px;
+      flex-wrap: wrap;
     }
     .btn {
       padding: 10px 18px;
@@ -351,8 +444,11 @@
           desktop: [
             {
               id: "neu_d1",
+              chapter: "Chapter 6: Ion Channels",
               bookRef: "Principles of Neural Science (6th Ed.) · Ch.6",
               track: "神經科學 · 機制推導",
+              lens: "🧲 生物物理/電生理",
+              concept: "Nav去活化與單向傳導",
               title: "動作電位離子動力學與單向傳導機制",
               prompt: "【電腦端驗收 · 英文論述】\n請說明電壓門控鈉通道（Nav）去活化（Inactivation）與活化（Activation）的差異，並深入解釋絕對不應期與相對不應期如何透過分子機制確保動作電位沿軸突「單向（Unidirectional）」傳導。",
               unitReward: 0.5,
@@ -362,8 +458,11 @@
           mobile: [
             {
               id: "neu_m1",
+              chapter: "Chapter 12: Synaptic Integration",
               bookRef: "Principles of Neural Science (6th Ed.) · Ch.12",
               track: "神經科學 · 隨身速記",
+              lens: "🧬 分子/受體",
+              concept: "NMDA阻斷機制",
               title: "NMDA 受體電壓依賴性阻斷",
               prompt: "【手機速記 · 離子檢索】\nNMDA 受體在神經元處於靜止膜電位時，會被細胞外的哪一種二價陽離子物理性阻斷通道孔？",
               unitReward: 0.1,
@@ -371,8 +470,11 @@
             },
             {
               id: "neu_m2",
+              chapter: "Chapter 6: Ion Channels",
               bookRef: "Principles of Neural Science (6th Ed.) · Ch.6",
               track: "神經科學 · 隨身速記",
+              lens: "🧲 生物物理",
+              concept: "平衡電位",
               title: "離子平衡電位 (Nernst 方程)",
               prompt: "【手機速記 · 生物物理】\n正常生理狀態下，神經元細胞內濃度遠高於細胞外、且平衡電位約在 -70 mV 至 -90 mV 的主要陽離子是？",
               unitReward: 0.1,
@@ -384,8 +486,11 @@
           desktop: [
             {
               id: "de_d1",
+              chapter: "A2.1: Nebensatz mit weil",
               bookRef: "Schritte Plus Neu A2.1",
               track: "德文 · A1 結構造句",
+              lens: "語法詞序",
+              concept: "從屬子句動詞後置",
               title: "從屬子句 (weil) 與動詞後置",
               prompt: "【電腦端驗收 · 骨架組裝】\n請將這兩句合併為一個帶有 'weil' 的句子，注意動詞詞序：\n1. Ich lerne heute fleißig Deutsch.\n2. Ich möchte 2027 in Deutschland studieren.",
               unitReward: 0.2,
@@ -395,8 +500,11 @@
           mobile: [
             {
               id: "de_m1",
+              chapter: "A1.1: Akkusativ & 定冠詞",
               bookRef: "Schritte Plus Neu A1.1",
               track: "德文 · A1 格位快問",
+              lens: "格位冠詞",
+              concept: "Akkusativ",
               title: "Akkusativ 陽性冠詞",
               prompt: "【手機速記 · 填空】\nDer Mann kauft _____ (der) Tisch. (請填入正確的定冠詞形式)",
               unitReward: 0.1,
@@ -408,8 +516,11 @@
           desktop: [
             {
               id: "es_d1",
+              chapter: "Unidad 20: Imperfecto vs Indefinido",
               bookRef: "Gramática de uso del español A2",
               track: "西文 · A2 時態深度辨析",
+              lens: "時態辨析",
+              concept: "過去時對比",
               title: "Indefinido 與 Imperfecto 綜合寫作",
               prompt: "【電腦端驗收 · 段落推導】\n請造一個包含「持續背景（Imperfecto）」與「突發動作（Indefinido）」的複式句（至少包含 cuando 或 mientras）。",
               unitReward: 0.2,
@@ -419,8 +530,11 @@
           mobile: [
             {
               id: "es_m1",
+              chapter: "Unidad 15: Pretérito Indefinido",
               bookRef: "Gramática de uso del español A2",
               track: "西文 · A2 動詞變位快篩",
+              lens: "動詞變位",
+              concept: "不規則變位",
               title: "不規則動詞 Indefinido",
               prompt: "【手機速記】\n動詞 'hacer' 在第三人稱單數 (él/ella/usted) 的 Pretérito Indefinido 變位是？",
               unitReward: 0.1,
@@ -432,8 +546,11 @@
           desktop: [
             {
               id: "th_d1",
+              chapter: "Unit 2: 性別尾詞與拼讀",
               bookRef: "基礎泰語 · Unit 2",
               track: "泰文 · 拼讀語氣解析",
+              lens: "語用語氣",
+              concept: "敬語尾詞",
               title: "性別禮貌尾詞 (ครับ / ค่ะ) 語用差異",
               prompt: "【電腦端驗收 · 語法解析】\n請說明泰語中男性與女性專用禮貌尾詞（ครับ 與 ค่ะ / คะ）的發音聲調差異，以及女性在「陳述句」與「疑問句」中使用 ค่ะ 與 คะ 的規則。",
               unitReward: 0.2,
@@ -443,8 +560,11 @@
           mobile: [
             {
               id: "th_m1",
+              chapter: "Unit 1: 中輔音與日常招呼",
               bookRef: "基礎泰語 · Unit 1",
               track: "泰文 · 日常招呼",
+              lens: "日常詞彙",
+              concept: "招呼用語",
               title: "你好 / 早安",
               prompt: "【手機速記 · 詞彙檢索】\n泰文中不分早晚最通用的問候語「你好（Sawatdee）」的泰文字母拼寫是？（提示：ส...）",
               unitReward: 0.1,
@@ -452,8 +572,11 @@
             },
             {
               id: "th_m2",
+              chapter: "Unit 1: 中輔音與日常招呼",
               bookRef: "基礎泰語 · Unit 1",
               track: "泰文 · 字母辨析",
+              lens: "輔音分類",
+              concept: "中輔音",
               title: "第一個中輔音 ก",
               prompt: "【手機速記 · 字母快篩】\n泰文字母表的第一個字母「ก」（雞 / kai）屬於哪一類輔音（中輔音 / 高輔音 / 低輔音）？",
               unitReward: 0.1,
@@ -461,8 +584,11 @@
             },
             {
               id: "th_m3",
+              chapter: "Unit 1: 中輔音與日常招呼",
               bookRef: "基礎泰語 · Unit 1",
               track: "泰文 · 禮貌用語",
+              lens: "日常詞彙",
+              concept: "禮貌感謝",
               title: "謝謝",
               prompt: "【手機速記】\n泰文的「謝謝（Khop khun）」正確泰文拼寫是？（提示：ข...）",
               unitReward: 0.1,
@@ -477,22 +603,19 @@
     let todayDate = getTaipeiDate();
     let currentSubject = "neuro";
     let currentDeviceMode = "desktop";
-    
-    let cardPointers = {
-      neuro: { desktop: 0, mobile: 0 },
-      german: { desktop: 0, mobile: 0 },
-      spanish: { desktop: 0, mobile: 0 },
-      thai: { desktop: 0, mobile: 0 }
-    };
+    let currentFilteredList = [];
+    let currentActiveItem = null;
 
     let dailyData = {
       neuro: 0,
       german: 0,
       spanish: 0,
       thai: 0,
-      completedCardIds: []
+      completedCardIds: [],
+      pomoCount: 0
     };
 
+    let masteryMap = new Map(); // q_id -> { passCount, failCount, lastPassedAt }
     let thaiVocabSet = new Map();
 
     const authStatusEl = document.getElementById("auth-status");
@@ -504,6 +627,15 @@
     const mapPanelEl = document.getElementById("map-panel");
     const bookListEl = document.getElementById("book-list");
     const thaiImmersionBoxEl = document.getElementById("thai-immersion-box");
+    const chapterFilterEl = document.getElementById("chapter-filter");
+    const lensFilterEl = document.getElementById("lens-filter");
+    const pomoTimerEl = document.getElementById("pomo-timer");
+    const pomoCountEl = document.getElementById("pomo-count");
+
+    // 番茄鐘計時器狀態
+    let pomoSecondsLeft = 25 * 60;
+    let pomoTimerInterval = null;
+    let isPomoRunning = false;
 
     onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -512,6 +644,7 @@
         listenToDailyLog(user.uid);
         listenToCustomCurriculum(user.uid);
         listenToThaiVocab(user.uid);
+        listenToMastery(user.uid);
       } else {
         await signInAnonymously(auth);
       }
@@ -526,9 +659,10 @@
           dailyData.german = remote.german || 0;
           dailyData.spanish = remote.spanish || 0;
           dailyData.thai = remote.thai || 0;
+          dailyData.pomoCount = remote.pomoCount || 0;
           dailyData.completedCardIds = Array.isArray(remote.completedCardIds) ? remote.completedCardIds : [];
         } else {
-          setDoc(docRef, { neuro: 0, german: 0, spanish: 0, thai: 0, completedCardIds: [] });
+          setDoc(docRef, { neuro: 0, german: 0, spanish: 0, thai: 0, completedCardIds: [], pomoCount: 0 });
         }
         renderDashboard();
         renderCard();
@@ -543,6 +677,7 @@
           if (custom.books) CURRICULUM_DATA.books = custom.books;
           if (custom.questions) CURRICULUM_DATA.questions = custom.questions;
         }
+        populateFilters();
         renderLearningMap();
         renderCard();
       });
@@ -559,20 +694,114 @@
       });
     }
 
+    function listenToMastery(uid) {
+      const docRef = doc(db, `users/${uid}/meta/mastery`);
+      onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data().records || {};
+          masteryMap.clear();
+          Object.keys(data).forEach(k => masteryMap.set(k, data[k]));
+        }
+        renderCard();
+      });
+    }
+
+    async function recordMastery(qId, isSuccess) {
+      const current = masteryMap.get(qId) || { passCount: 0, failCount: 0, lastReviewedAt: todayDate };
+      if (isSuccess) {
+        current.passCount = (current.passCount || 0) + 1;
+      } else {
+        current.failCount = (current.failCount || 0) + 1;
+      }
+      current.lastReviewedAt = todayDate;
+      masteryMap.set(qId, current);
+
+      if (currentUser) {
+        try {
+          const docRef = doc(db, `users/${currentUser.uid}/meta/mastery`);
+          const plainObj = {};
+          masteryMap.forEach((v, k) => plainObj[k] = v);
+          await setDoc(docRef, { records: plainObj }, { merge: true });
+        } catch (e) {
+          console.warn("掌握度同步失敗：", e);
+        }
+      }
+    }
+
+    function getMasteryInfo(qId) {
+      const rec = masteryMap.get(qId);
+      if (!rec) return { level: "low", label: "🔴 生疏 / 新題", score: 0 };
+      const total = (rec.passCount || 0) + (rec.failCount || 0);
+      if (total === 0) return { level: "low", label: "🔴 生疏", score: 0 };
+      const score = Math.round(((rec.passCount || 0) / total) * 100);
+      if (score >= 80) return { level: "high", label: `🟢 精熟 (${score}%)`, score };
+      if (score >= 50) return { level: "mid", label: `🟡 吸收中 (${score}%)`, score };
+      return { level: "low", label: `🔴 弱點 (${score}%)`, score };
+    }
+
+    // 動態填充電腦/手機範圍篩選下拉選單
+    function populateFilters() {
+      const subjectPool = CURRICULUM_DATA.questions[currentSubject] || {};
+      const allQuestions = [...(subjectPool.desktop || []), ...(subjectPool.mobile || [])];
+
+      const chapters = new Set();
+      const lenses = new Set();
+
+      allQuestions.forEach(q => {
+        if (q.chapter) chapters.add(q.chapter);
+        if (q.lens) lenses.add(q.lens);
+      });
+
+      const currentChapVal = chapterFilterEl.value;
+      const currentLensVal = lensFilterEl.value;
+
+      chapterFilterEl.innerHTML = '<option value="ALL">全部章節 (綜合輪播)</option>';
+      chapters.forEach(ch => {
+        chapterFilterEl.innerHTML += `<option value="${ch}">${ch}</option>`;
+      });
+
+      lensFilterEl.innerHTML = '<option value="ALL">全學科視角</option>';
+      lenses.forEach(l => {
+        lensFilterEl.innerHTML += `<option value="${l}">${l}</option>`;
+      });
+
+      if (chapters.has(currentChapVal)) chapterFilterEl.value = currentChapVal;
+      if (lenses.has(currentLensVal)) lensFilterEl.value = currentLensVal;
+    }
+
     function renderLearningMap() {
       bookListEl.innerHTML = "";
       CURRICULUM_DATA.books.forEach(b => {
         const card = document.createElement("div");
         card.className = "book-card";
-        let tagsHtml = (b.chapters || []).map(ch => `<span class="chapter-badge">✓ ${ch}</span>`).join("");
+        let tagsHtml = (b.chapters || []).map(ch => {
+          return `<span class="chapter-badge" style="cursor:pointer;" onclick="selectSpecificChapter('${ch}', '${b.subject}')">🎯 ${ch}</span>`;
+        }).join("");
+
         card.innerHTML = `
-          <div class="book-title">📖 ${b.title}</div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div class="book-title">📖 ${b.title}</div>
+            <button class="tool-btn" style="padding:2px 8px;" onclick="copyChapterPrompt('${b.title}')">📋 複製出題Prompt</button>
+          </div>
           <div class="book-version">版本：${b.version} (${b.subject.toUpperCase()})</div>
           <div class="chapter-tags">${tagsHtml}</div>
         `;
         bookListEl.appendChild(card);
       });
     }
+
+    window.selectSpecificChapter = function(ch, sub) {
+      if (currentSubject !== sub) switchSubject(sub);
+      chapterFilterEl.value = ch;
+      mapPanelEl.classList.remove("show");
+      renderCard();
+    };
+
+    window.copyChapterPrompt = function(bookTitle) {
+      const text = `請依照我們先前設定的標準 JSON 格式，為【${bookTitle}】設計新題庫：\n1. 電腦深研論述題 3 題（含生物物理/語法底層因果鏈 reference 與 lens 學科視角）\n2. 手機速記快問 5 題（精確術語 answers）\n格式包含 "book" 與 "questions" 頂層欄位。`;
+      navigator.clipboard.writeText(text);
+      alert("📋 已複製標準出題 Prompt！可直接貼給 Gemini 生成新題目。");
+    };
 
     function renderDashboard() {
       const neuroUnits = dailyData.neuro || 0;
@@ -598,6 +827,37 @@
         document.getElementById("tab-german").classList.remove("locked");
         document.getElementById("tab-spanish").classList.remove("locked");
       }
+
+      if (pomoCountEl) pomoCountEl.textContent = dailyData.pomoCount || 0;
+    }
+
+    // 自適應權重選題演算法（解決「每次從第 1 題開始」並將弱點題自動置頂）
+    function pickNextSmartItem(list) {
+      if (!list || list.length === 0) return null;
+      if (list.length === 1) return list[0];
+
+      // 計算每題權重：今日未完成 +3分；掌握度愈低（生疏/錯題）分數愈高；熟練題降權
+      const scoredList = list.map(item => {
+        const isCompletedToday = (dailyData.completedCardIds || []).includes(item.id);
+        const m = getMasteryInfo(item.id);
+        let weight = 10;
+
+        if (!isCompletedToday) weight += 20; // 今日未刷優先
+        if (m.level === "low") weight += 30; // 弱點高權重
+        else if (m.level === "mid") weight += 15;
+        else weight += 2; // 精熟題降低出現機率
+
+        return { item, weight };
+      });
+
+      const totalWeight = scoredList.reduce((acc, curr) => acc + curr.weight, 0);
+      let rand = Math.random() * totalWeight;
+
+      for (const entry of scoredList) {
+        if (rand < entry.weight) return entry.item;
+        rand -= entry.weight;
+      }
+      return scoredList[0].item;
     }
 
     // 渲染卡片
@@ -615,39 +875,84 @@
       thaiImmersionBoxEl.style.display = currentSubject === "thai" ? "flex" : "none";
 
       const subjectPool = CURRICULUM_DATA.questions[currentSubject] || {};
-      const list = subjectPool[currentDeviceMode] || [];
+      const fullList = subjectPool[currentDeviceMode] || [];
 
-      if (!list || list.length === 0) {
-        document.getElementById("card-badge").textContent = "無題目";
-        document.getElementById("card-title").textContent = "此模式目前無可用題目";
+      // 依據下拉選單過濾範圍（支援大考衝刺指定單章或學科視角）
+      const selectedChap = chapterFilterEl.value;
+      const selectedLens = lensFilterEl.value;
+
+      currentFilteredList = fullList.filter(q => {
+        const matchChap = (selectedChap === "ALL") || (q.chapter === selectedChap);
+        const matchLens = (selectedLens === "ALL") || (q.lens === selectedLens);
+        return matchChap && matchLens;
+      });
+
+      if (!currentFilteredList || currentFilteredList.length === 0) {
+        document.getElementById("card-badge").textContent = "無篩選題目";
+        document.getElementById("card-badge").className = "badge";
+        document.getElementById("card-title").textContent = "此範圍內目前無可用題目";
         document.getElementById("card-source").textContent = "";
-        document.getElementById("card-prompt").textContent = "請透過上方「學習地圖」匯入新章節題目。";
+        document.getElementById("card-prompt").textContent = "請切換篩選條件，或透過「學習地圖」匯入該章節內容。";
         document.getElementById("reward-unit").textContent = "+0.0";
+        document.getElementById("mastery-badge").style.display = "none";
+        document.getElementById("lens-badge").style.display = "none";
+        currentActiveItem = null;
         return;
       }
 
-      const pointer = cardPointers[currentSubject][currentDeviceMode] % list.length;
-      const item = list[pointer];
+      // 如果尚未選定當前題目或當前題目不在篩選範圍內，抽題
+      if (!currentActiveItem || !currentFilteredList.some(q => q.id === currentActiveItem.id)) {
+        currentActiveItem = pickNextSmartItem(currentFilteredList);
+      }
+
+      const item = currentActiveItem;
       const isCompletedToday = (dailyData.completedCardIds || []).includes(item.id);
+      const mastery = getMasteryInfo(item.id);
 
       document.getElementById("card-badge").textContent = item.track || "學習進度";
       document.getElementById("card-badge").className = `badge badge-${currentSubject}`;
+      
+      const masteryEl = document.getElementById("mastery-badge");
+      masteryEl.style.display = "inline-block";
+      masteryEl.textContent = mastery.label;
+      masteryEl.className = `mastery-pill mastery-${mastery.level}`;
+
+      const lensEl = document.getElementById("lens-badge");
+      if (item.lens) {
+        lensEl.style.display = "inline-block";
+        lensEl.textContent = item.lens;
+      } else {
+        lensEl.style.display = "none";
+      }
+
       document.getElementById("card-source").textContent = item.bookRef ? `📚 來源教材：${item.bookRef}` : "";
       document.getElementById("card-title").textContent = item.title;
-      document.getElementById("card-meta").textContent = `題目 ${pointer + 1} / ${list.length} ${isCompletedToday ? '· (今日已驗收，不重複累加)' : ''}`;
+      document.getElementById("card-meta").textContent = `範圍內共 ${currentFilteredList.length} 題 ${isCompletedToday ? '· (今日已驗收，複習不累加)' : ''}`;
       document.getElementById("card-prompt").textContent = item.prompt;
       
       const inputContainer = document.getElementById("input-container");
       if (currentDeviceMode === "desktop") {
-        inputContainer.innerHTML = `<textarea id="user-ans" placeholder="【💻 電腦深研】請詳細輸入機制因果推導或論述（AI 教授審查，Ctrl+Enter 送出）..."></textarea>`;
+        inputContainer.innerHTML = `
+          <textarea id="user-ans" placeholder="【💻 電腦深研】請詳細輸入機制因果推導或論述（AI 審查，Ctrl+Enter 送出）..."></textarea>
+          <div class="input-tools">
+            <button class="tool-btn" onclick="triggerUglyDraft()">🌱 靈感毛胚鷹架 (AI輔助)</button>
+            <button class="tool-btn" onclick="startVoiceRecognition()">🎙️ 語音口述</button>
+          </div>
+        `;
       } else {
-        inputContainer.innerHTML = `<input type="text" id="user-ans" placeholder="【📱 手機速記】請在此輸入答案（Enter 送出）..." autocomplete="off">`;
+        inputContainer.innerHTML = `
+          <input type="text" id="user-ans" placeholder="【📱 手機速記】請在此輸入答案（Enter 送出）..." autocomplete="off">
+          <div class="input-tools">
+            <button class="tool-btn" onclick="startVoiceRecognition()">🎙️ 語音辨識</button>
+          </div>
+        `;
       }
 
-const rewardUnitEl = document.getElementById("reward-unit");
-if (rewardUnitEl) {
-  rewardUnitEl.textContent = isCompletedToday ? "+0.0 (已累計)" : `+${item.unitReward}`;
-}
+      const rewardUnitEl = document.getElementById("reward-unit");
+      if (rewardUnitEl) {
+        rewardUnitEl.textContent = isCompletedToday ? "+0.0 (已累計)" : `+${item.unitReward}`;
+      }
+
       const userAnsEl = document.getElementById("user-ans");
       if (userAnsEl) {
         userAnsEl.addEventListener("keydown", (e) => {
@@ -666,7 +971,88 @@ if (rewardUnitEl) {
       }
     };
 
-   // 核心：Gemini Flash API 審查函數（純 Flash 備援 + 阻斷 Pro 避免額度報錯）
+    // 換題功能（避免卡在不熟題目時無法跳題）
+    window.skipToNextQuestion = function() {
+      if (!currentFilteredList || currentFilteredList.length <= 1) return;
+      const remain = currentFilteredList.filter(q => q.id !== currentActiveItem.id);
+      currentActiveItem = pickNextSmartItem(remain);
+      renderCard();
+    };
+
+    // 🌱 毛胚草稿模式（Ugly Draft）：降低完美主義啟動阻力
+    window.triggerUglyDraft = async function() {
+      const inputEl = document.getElementById("user-ans");
+      if (!inputEl) return;
+      const roughDraft = inputEl.value.trim();
+
+      if (!roughDraft) {
+        const sampleDraft = prompt("請隨意輸入幾個你腦海中想到的散裝關鍵字、中文片段或碎片筆記（不必文法正確）：", "去極化, m門開, h門塞住, 鈉電流進不來, 不應期");
+        if (!sampleDraft) return;
+        inputEl.value = sampleDraft;
+        return triggerUglyDraft();
+      }
+
+      const apiKey = localStorage.getItem("gemini_api_key");
+      if (!apiKey) return alert("請先設定 API Key 以使用靈感毛胚引導！");
+
+      const draftBtn = event.target;
+      draftBtn.disabled = true;
+      draftBtn.textContent = "🌱 骨架梳理中...";
+
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: `你是一位支持型的神經科學導師。學生正在撰寫論述，目前因完美主義卡住，只寫出以下散裝草稿：
+題目：${currentActiveItem.prompt}
+學生零碎想法：${roughDraft}
+
+請採用「先肯定亮點，再給予 3 點骨架填空提示」的方式，幫助他把這些關鍵字組合成嚴謹推導。請用繁體中文回答，簡短親切：` }] }]
+          })
+        });
+        const data = await res.json();
+        const advice = data.candidates?.[0]?.content?.parts?.[0]?.text || "無法獲取建議";
+        alert(`【🌱 毛胚骨架梳理回饋】：\n\n${advice}\n\n現在試著把完整的因果鏈補齊吧！`);
+      } catch (e) {
+        alert("鷹架引導連線失敗：" + e.message);
+      } finally {
+        draftBtn.disabled = false;
+        draftBtn.textContent = "🌱 靈感毛胚鷹架 (AI輔助)";
+      }
+    };
+
+    // 🎙️ 語音辨識輸入
+    window.startVoiceRecognition = function() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert("您的瀏覽器暫不支援語音辨識，請使用 Chrome 瀏覽器。");
+        return;
+      }
+      const recognition = new SpeechRecognition();
+      recognition.lang = currentSubject === "german" ? "de-DE" : (currentSubject === "spanish" ? "es-ES" : (currentSubject === "thai" ? "th-TH" : "en-US"));
+      recognition.interimResults = false;
+      
+      const inputEl = document.getElementById("user-ans");
+      recognition.onstart = () => alert(`🎙️ 語音輸入開始（${recognition.lang}），請對著麥克風清晰朗讀機制推導...`);
+      recognition.onresult = (event) => {
+        const text = event.results[0][0].transcript;
+        if (inputEl) {
+          inputEl.value = inputEl.value ? `${inputEl.value} ${text}` : text;
+        }
+      };
+      recognition.onerror = (e) => alert("語音辨識中斷：" + e.error);
+      recognition.start();
+    };
+
+    // ⚡ 2 分鐘微啟動保底模式（ADHD 能量耗盡時使用）
+    window.triggerMicroCommitment = function() {
+      setDeviceMode("mobile");
+      switchSubject("neuro");
+      alert("⚡ 啟動 2 分鐘保底模式！只需完成眼前這道 10 秒速記題，今日連勝紀錄即視為守護完成！");
+    };
+
+    // 核心：Gemini Flash API 審查函數（純 Flash 備援 + 阻斷 Pro 避免額度報錯）
     async function evaluateWithGemini(userAns, item) {
       const apiKey = localStorage.getItem("gemini_api_key");
       if (!apiKey) {
@@ -679,7 +1065,7 @@ if (rewardUnitEl) {
         }
       }
 
-      const promptText = `你是一位歐洲頂尖大學神經科學與語言學的教授。請對學生的回答進行嚴格且專業的機制審查。
+      const promptText = `你是一位歐洲頂尖大學神經科學與語言學的教授。請對學生的回答進行嚴格且富含建設性的機制審查。
 
 【題目】：
 ${item.prompt}
@@ -694,13 +1080,13 @@ ${userAns}
 1. 嚴禁無意義字元（如 jjjjj、隨意字母拼湊、無邏輯廢話），若發現直接判定 passed: false。
 2. 檢查學生是否真正解釋出「底層機制因果鏈」或「正確語法結構」，不能只是顛倒因果或拼湊術語。
 3. 容許學生用自己的話或英文/中文解釋，只要物理/生物/語法機制本質等價即可給過。
-4. 請「只輸出」標準 JSON 格式，不可有額外文字：
+4. 講評請遵守三段式結構：【肯定亮點】➔【關鍵盲點】➔【一句提點】。
+5. 請「只輸出」標準 JSON 格式，不可有額外文字：
 {
   "passed": true 或 false,
-  "feedback": "50字內的精準講評，指出正確點或關鍵缺失"
+  "feedback": "70字內精簡講評：肯定亮點 + 核心盲點/精進點"
 }`;
 
-      // 只保留高額度、免費層級專用的 Flash 家族，完全排除易被擋的 Pro 系列
       const flashModels = [
         "gemini-2.5-flash",
         "gemini-2.0-flash",
@@ -743,6 +1129,7 @@ ${userAns}
 
       return JSON.parse(outputRaw);
     }
+
     // 提交驗收
     window.submitProgress = async function() {
       const inputEl = document.getElementById("user-ans");
@@ -755,29 +1142,26 @@ ${userAns}
         return;
       }
 
-      const subjectPool = CURRICULUM_DATA.questions[currentSubject] || {};
-      const list = subjectPool[currentDeviceMode] || [];
-      if (!list || list.length === 0) return;
-      
-      const pointer = cardPointers[currentSubject][currentDeviceMode] % list.length;
-      const item = list[pointer];
+      const item = currentActiveItem;
+      if (!item) return;
 
       let isPassed = false;
 
-      // 手機端：本地速記比對
       if (currentDeviceMode === "mobile") {
         const cleanAns = userAns.toLowerCase();
         const validAnswers = (item.answers || []).map(a => a.toLowerCase());
         
         if (validAnswers.includes(cleanAns)) {
           isPassed = true;
+          await recordMastery(item.id, true);
           alert(`🎉 回答正確！獲得 +${item.unitReward} 單位進度。`);
         } else {
+          await recordMastery(item.id, false);
           alert(`❌ 答案有誤。\n您的回答：${userAns}\n參考正解：${item.answers ? item.answers[0] : "請重新確認"}`);
+          renderCard();
           return;
         }
       } else {
-        // 電腦端：呼叫 Gemini 進行整句因果審查（含備援自主核驗）
         try {
           submitBtn.disabled = true;
           submitBtn.textContent = "🤖 審查因果鏈中...";
@@ -786,18 +1170,21 @@ ${userAns}
 
           if (evalResult.passed) {
             isPassed = true;
-            alert(`✅ AI 教授審查通過！(+${item.unitReward} 單位)\n\n【講評】：${evalResult.feedback}`);
+            await recordMastery(item.id, true);
+            alert(`✅ AI 教授審查通過！(+${item.unitReward} 單位)\n\n${evalResult.feedback}`);
           } else {
-            alert(`❌ 審查未通過！\n\n【AI 診斷漏洞】：${evalResult.feedback}\n\n請依據機制因果補充後重新提交！`);
+            await recordMastery(item.id, false);
+            alert(`❌ 審查未通過！\n\n${evalResult.feedback}\n\n請依據機制因果補充後重新提交！`);
+            renderCard();
             return;
           }
         } catch (err) {
-          // 當遇 API 配額上限或網路繁忙時，啟用自主檢核機制
           const confirmSelf = confirm(
             `⚠️ AI 雲端連線繁忙或配額受限。\n\n是否切換為【自主因果核對模式】？\n\n【標準因果機制對照】：\n${item.reference || "請確認是否符合學術推導。"}\n\n若您確認剛才的回答已推導出關鍵機制，請點擊「確定」通過驗收；若推導不完整請按「取消」繼續修改。`
           );
           if (confirmSelf) {
             isPassed = true;
+            await recordMastery(item.id, true);
           } else {
             return;
           }
@@ -831,34 +1218,27 @@ ${userAns}
         }
 
         inputEl.value = "";
-        cardPointers[currentSubject][currentDeviceMode] = (cardPointers[currentSubject][currentDeviceMode] + 1) % list.length;
+        currentActiveItem = null; // 清空以觸發權重抽取下一題
         renderCard();
       }
     };
 
-// 智慧標準化課本名稱工具（避免大小寫或標點符號造成誤判）
     function normalizeBookName(str) {
       return (str || "").toLowerCase().replace(/[^a-z0-9\u4e00-\u9fa5]/g, "");
     }
 
-    // 匯入自定義章節（具備智慧模糊去重合併）
+    // 匯入自定義章節
     window.importCustomChapter = async function() {
       const rawText = document.getElementById("import-json-text").value.trim();
-      if (!rawText) {
-        alert("⚠️ 請先貼上 JSON 格式的章節題庫！");
-        return;
-      }
+      if (!rawText) return alert("⚠️ 請先貼上 JSON 格式的章節題庫！");
 
       try {
         const data = JSON.parse(rawText);
-        if (!data.book || !data.questions) {
-          throw new Error("JSON 格式缺少 'book' 或 'questions' 欄位。");
-        }
+        if (!data.book || !data.questions) throw new Error("JSON 缺少 'book' 或 'questions' 欄位。");
 
         const sub = data.book.subject || "neuro";
         const incomingTitleNorm = normalizeBookName(data.book.title);
 
-        // 1. 智慧尋找既有課本：只要科目相符且書名核心字串吻合即判定為同一本書
         let existingBook = CURRICULUM_DATA.books.find(b => 
           b.subject === sub && (
             normalizeBookName(b.title) === incomingTitleNorm ||
@@ -868,12 +1248,10 @@ ${userAns}
         );
 
         if (existingBook) {
-          // 課本已存在：僅追加新章節（避免重複標籤）
           if (!existingBook.chapters.includes(data.book.chapter)) {
             existingBook.chapters.push(data.book.chapter);
           }
         } else {
-          // 全新課本：建立新項目
           CURRICULUM_DATA.books.push({
             id: `book_${Date.now()}`,
             title: data.book.title,
@@ -883,31 +1261,25 @@ ${userAns}
           });
         }
 
-        // 2. 清理歷史已存在的重複項目（例如先前因字串差異被拆開的卡片）
         const consolidatedBooks = [];
         CURRICULUM_DATA.books.forEach(b => {
           const bNorm = normalizeBookName(b.title);
           const found = consolidatedBooks.find(item => item.subject === b.subject && normalizeBookName(item.title) === bNorm);
           if (found) {
-            b.chapters.forEach(ch => {
-              if (!found.chapters.includes(ch)) found.chapters.push(ch);
-            });
+            b.chapters.forEach(ch => { if (!found.chapters.includes(ch)) found.chapters.push(ch); });
           } else {
             consolidatedBooks.push({ ...b });
           }
         });
         CURRICULUM_DATA.books = consolidatedBooks;
 
-        // 3. 題庫追加入庫
         const bookRefLabel = `${data.book.title} · ${data.book.chapter}`;
-        if (!CURRICULUM_DATA.questions[sub]) {
-          CURRICULUM_DATA.questions[sub] = { desktop: [], mobile: [] };
-        }
+        if (!CURRICULUM_DATA.questions[sub]) CURRICULUM_DATA.questions[sub] = { desktop: [], mobile: [] };
 
         if (data.questions.desktop) {
           data.questions.desktop.forEach(q => {
             q.bookRef = bookRefLabel;
-            // 避免題目 ID 重複造成累積錯誤
+            q.chapter = data.book.chapter;
             if (!CURRICULUM_DATA.questions[sub].desktop.some(existQ => existQ.id === q.id)) {
               CURRICULUM_DATA.questions[sub].desktop.push(q);
             }
@@ -916,13 +1288,13 @@ ${userAns}
         if (data.questions.mobile) {
           data.questions.mobile.forEach(q => {
             q.bookRef = bookRefLabel;
+            q.chapter = data.book.chapter;
             if (!CURRICULUM_DATA.questions[sub].mobile.some(existQ => existQ.id === q.id)) {
               CURRICULUM_DATA.questions[sub].mobile.push(q);
             }
           });
         }
 
-        // 4. 同步至 Firestore
         if (currentUser) {
           const docRef = doc(db, `users/${currentUser.uid}/meta/curriculum`);
           await setDoc(docRef, CURRICULUM_DATA);
@@ -930,10 +1302,11 @@ ${userAns}
 
         alert(`🎉 成功更新教材【${data.book.title}】！\n章節已自動歸併至該課本目錄下。`);
         document.getElementById("import-json-text").value = "";
+        populateFilters();
         renderLearningMap();
         renderCard();
       } catch (err) {
-        alert("❌ JSON 解析失敗，請確認格式是否正確：\n" + err.message);
+        alert("❌ JSON 解析失敗，請確認格式：" + err.message);
       }
     };
 
@@ -998,9 +1371,69 @@ ${userAns}
       }
     };
 
+    // 番茄鐘控制器（階梯式專注 + 換腦主動休息）
+    window.setPomoDuration = function(mins) {
+      clearInterval(pomoTimerInterval);
+      isPomoRunning = false;
+      pomoSecondsLeft = mins * 60;
+      updatePomoDisplay();
+      document.querySelectorAll(".pomo-pill").forEach(p => p.classList.remove("active"));
+      event.target.classList.add("active");
+    };
+
+    function updatePomoDisplay() {
+      const m = Math.floor(pomoSecondsLeft / 60).toString().padStart(2, "0");
+      const s = (pomoSecondsLeft % 60).toString().padStart(2, "0");
+      pomoTimerEl.textContent = `${m}:${s}`;
+    }
+
+    window.togglePomoTimer = function() {
+      const btn = document.getElementById("pomo-start-btn");
+      if (isPomoRunning) {
+        clearInterval(pomoTimerInterval);
+        isPomoRunning = false;
+        btn.textContent = "▶ 開始專注";
+      } else {
+        isPomoRunning = true;
+        btn.textContent = "⏸ 暫停";
+        pomoTimerInterval = setInterval(() => {
+          if (pomoSecondsLeft > 0) {
+            pomoSecondsLeft--;
+            updatePomoDisplay();
+          } else {
+            clearInterval(pomoTimerInterval);
+            isPomoRunning = false;
+            btn.textContent = "▶ 開始專注";
+            onPomoComplete();
+          }
+        }, 1000);
+      }
+    };
+
+    window.extendPomo = function(mins) {
+      pomoSecondsLeft += mins * 60;
+      updatePomoDisplay();
+      if (!isPomoRunning) togglePomoTimer();
+    };
+
+    async function onPomoComplete() {
+      dailyData.pomoCount = (dailyData.pomoCount || 0) + 1;
+      if (currentUser) {
+        const docRef = doc(db, `users/${currentUser.uid}/daily_logs/${todayDate}`);
+        await updateDoc(docRef, { pomoCount: increment(1) });
+      }
+      renderDashboard();
+
+      const switchBreak = confirm(
+        "🍅 番茄鐘達成！大腦深度推導迴路需要換腦休息。\n\n建議進入 5 分鐘【雙軌換腦模式】：切換至德文/西文/泰文速記刷 1~2 題！\n\n是否立即前往語言副線？"
+      );
+      if (switchBreak) {
+        switchSubject("german");
+      }
+    }
+
     window.toggleLearningMap = () => mapPanelEl.classList.toggle("show");
 
-    // 設定或重設 Gemini API Key
     window.configureApiKey = () => {
       const currentKey = localStorage.getItem("gemini_api_key") || "";
       const newKey = prompt("🔑 請輸入 Google AI Studio 的 Gemini API Key (留空可清除)：", currentKey);
@@ -1020,6 +1453,8 @@ ${userAns}
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
       const btn = document.getElementById(`tab-${sub}`);
       if (btn) btn.classList.add("active");
+      populateFilters();
+      currentActiveItem = null;
       renderCard();
     };
 
@@ -1028,10 +1463,18 @@ ${userAns}
       document.querySelectorAll(".device-btn").forEach(b => b.classList.remove("active"));
       const btn = document.getElementById(`mode-${mode}`);
       if (btn) btn.classList.add("active");
+      currentActiveItem = null;
       renderCard();
     };
 
+    window.onFilterChange = function() {
+      currentActiveItem = null;
+      renderCard();
+    };
+
+    populateFilters();
     renderLearningMap();
+    updatePomoDisplay();
   </script>
 </head>
 <body>
@@ -1043,6 +1486,7 @@ ${userAns}
       <span class="sync-status"></span><span id="auth-status">連線中...</span>
     </div>
     <div class="top-actions">
+      <button class="action-btn" onclick="triggerMicroCommitment()">⚡ 2分鐘微啟動</button>
       <button class="action-btn" onclick="configureApiKey()">🔑 AI 設定</button>
       <button class="action-btn" onclick="toggleLearningMap()">🗺️ 學習地圖與匯入</button>
       <div class="device-switcher">
@@ -1052,10 +1496,38 @@ ${userAns}
     </div>
   </div>
 
+  <!-- Pomodoro Bar -->
+  <div class="pomo-panel">
+    <div class="pomo-info">
+      <span>🍅 專注時鐘</span>
+      <span id="pomo-timer" class="pomo-time">25:00</span>
+      <span style="font-size:0.8rem; color:var(--text-muted);">今日累計：<span id="pomo-count" style="color:#f43f5e; font-weight:bold;">0</span> 顆</span>
+    </div>
+    <div class="pomo-controls">
+      <button class="pomo-pill" onclick="setPomoDuration(10)">⚡ 10m (抗拖延)</button>
+      <button class="pomo-pill active" onclick="setPomoDuration(25)">🎯 25m (標準)</button>
+      <button class="pomo-pill" onclick="setPomoDuration(40)">🔥 40m (沉浸)</button>
+      <button id="pomo-start-btn" class="action-btn" style="background:#e11d48;" onclick="togglePomoTimer()">▶ 開始專注</button>
+      <button class="tool-btn" onclick="extendPomo(5)">+5m 心流延長</button>
+    </div>
+  </div>
+
+  <!-- 大考衝刺範圍與學科視角過濾條 (Scope Filter) -->
+  <div class="filter-bar">
+    <div class="filter-header">
+      <span>🎯 複習範圍控制（大考專案 / 章節專攻）：</span>
+      <button class="tool-btn" style="padding:2px 8px;" onclick="skipToNextQuestion()">換下一題 ➔</button>
+    </div>
+    <div class="scope-selects">
+      <select id="chapter-filter" class="scope-select" onchange="onFilterChange()"></select>
+      <select id="lens-filter" class="scope-select" onchange="onFilterChange()"></select>
+    </div>
+  </div>
+
   <!-- 學習地圖面板 -->
   <div id="map-panel" class="map-panel">
     <div class="map-header">
-      <h3>📚 學習地圖：已匯入教材與章節</h3>
+      <h3>📚 學習地圖：已匯入教材與章節（點擊章節可快速鎖定範圍）</h3>
       <button class="action-btn" style="padding: 2px 8px;" onclick="toggleLearningMap()">✕ 關閉</button>
     </div>
     
@@ -1102,7 +1574,11 @@ ${userAns}
   <div class="stage-card">
     <div id="card-body">
       <div>
-        <span id="card-badge" class="badge badge-neuro">讀取中</span>
+        <div class="card-top-tags">
+          <span id="card-badge" class="badge badge-neuro">讀取中</span>
+          <span id="mastery-badge" class="mastery-pill mastery-low" style="display:none;"></span>
+          <span id="lens-badge" class="lens-tag" style="display:none;"></span>
+        </div>
         <div id="card-source" class="card-source-tag"></div>
         <h2 id="card-title" class="card-title">載入中...</h2>
         <div id="card-meta" class="card-meta-info"></div>
@@ -1113,9 +1589,9 @@ ${userAns}
         <div id="input-container" class="input-area"></div>
         
         <div class="action-row">
-  <span style="font-size: 0.8rem; color: var(--text-muted);">Enter 或 Ctrl+Enter 快速送出</span>
-  <button id="submit-btn" class="btn" onclick="submitProgress()">驗收提交 (<span id="reward-unit">+0.0</span>)</button>
-</div>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">Enter 或 Ctrl+Enter 快速送出</span>
+          <button id="submit-btn" class="btn" onclick="submitProgress()">驗收提交 (<span id="reward-unit">+0.0</span>)</button>
+        </div>
       </div>
     </div>
 
