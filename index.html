@@ -732,6 +732,25 @@
     });
 
     function listenToCustomCurriculum(uid) {
+      function listenToDailyLog(uid) {
+      const docRef = doc(db, `users/${uid}/daily_logs/${todayDate}`);
+      onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+          const remote = docSnap.data();
+          dailyData.neuro = remote.neuro || 0;
+          dailyData.german = remote.german || 0;
+          dailyData.spanish = remote.spanish || 0;
+          dailyData.thai = remote.thai || 0;
+          dailyData.omnivore = remote.omnivore || 0;
+          dailyData.pomoCount = remote.pomoCount || 0;
+          dailyData.completedCardIds = Array.isArray(remote.completedCardIds) ? remote.completedCardIds : [];
+        } else {
+          setDoc(docRef, { neuro: 0, german: 0, spanish: 0, thai: 0, omnivore: 0, completedCardIds: [], pomoCount: 0 });
+        }
+        renderDashboard();
+        renderCard();
+      });
+    }
       const docRef = doc(db, `users/${uid}/meta/curriculum`);
       onSnapshot(docRef, (docSnap) => {
         if (docSnap.exists()) {
