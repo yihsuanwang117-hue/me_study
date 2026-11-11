@@ -740,6 +740,7 @@
     }
 
     // 動態填充電腦/手機範圍篩選下拉選單
+// 動態填充電腦/手機範圍篩選下拉選單（自動智慧相容 bookRef 與 chapter 欄位）
     function populateFilters() {
       const subjectPool = CURRICULUM_DATA.questions[currentSubject] || {};
       const allQuestions = [...(subjectPool.desktop || []), ...(subjectPool.mobile || [])];
@@ -747,9 +748,31 @@
       const chapters = new Set();
       const lenses = new Set();
 
+      // 1. 從題目中提取章節與學科視角
       allQuestions.forEach(q => {
-        if (q.chapter) chapters.add(q.chapter);
+        let chapName = q.chapter;
+        // 若沒有獨立 chapter 欄位，自動從 bookRef (如 "... · Chapter 7") 解析
+        if (!chapName && q.bookRef) {
+          const parts = q.bookRef.split("·");
+          if (parts.length > 1) {
+            chapName = parts[1].trim();
+          } else {
+            chapName = q.bookRef.trim();
+          }
+        }
+        if (chapName) {
+          q.chapter = chapName; // 自動回填補齊，確保後續過濾生效
+          chapters.add(chapName);
+        }
+
         if (q.lens) lenses.add(q.lens);
+      });
+
+      // 2. 備援：若題目尚未解析出章節，從 CURRICULUM_DATA.books 目錄補充
+      (CURRICULUM_DATA.books || []).forEach(b => {
+        if (b.subject === currentSubject && Array.isArray(b.chapters)) {
+          b.chapters.forEach(ch => chapters.add(ch));
+        }
       });
 
       const currentChapVal = chapterFilterEl.value;
@@ -757,13 +780,24 @@
 
       chapterFilterEl.innerHTML = '<option value="ALL">全部章節 (綜合輪播)</option>';
       chapters.forEach(ch => {
-        chapterFilterEl.innerHTML += `<option value="${ch}">${ch}</option>`;
+        chapterFilterEl.innerHTML += `<option value="${ch}">📖 ${ch}</option>`;
       });
 
-      lensFilterEl.innerHTML = '<option value="ALL">全學科視角</option>';
-      lenses.forEach(l => {
-        lensFilterEl.innerHTML += `<option value="${l}">${l}</option>`;
-      });
+      lensFilterEl.innerHTML = '<option value="ALL">全學科視角 (不拘)</option>';
+      if (lenses.size > 0) {
+        lenses.forEach(l => {
+          lensFilterEl.innerHTML += `<option value="${l}">${l}</option>`;
+        });
+      } else {
+        // 預設神經科學常用視角
+        if (currentSubject === "neuro") {
+          lensFilterEl.innerHTML += `
+            <option value="🧲 生物物理/電生理">🧲 生物物理/電生理</option>
+            <option value="🧬 分子/受體">🧬 分子/受體</option>
+            <option value="🧠 迴路/突觸整合">🧠 迴路/突觸整合</option>
+          `;
+        }
+      }
 
       if (chapters.has(currentChapVal)) chapterFilterEl.value = currentChapVal;
       if (lenses.has(currentLensVal)) lensFilterEl.value = currentLensVal;
