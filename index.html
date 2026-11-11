@@ -651,11 +651,17 @@
 
   
 
-    // 課本名稱模糊歸一化（徹底避免同一本書被拆成兩個選單）
+   // 課本名稱強力歸一化：自動過濾版本、版次、括號與作者名
     function normalizeBookTitle(title) {
-      return (title || "")
+      if (!title) return "主要教材";
+      return title
         .toLowerCase()
-        .replace(/a1|a2|b1|b2|edition|ed\.|neu|plus|grammatik|principles|of|the/gi, "")
+        // 去除括號及其內部所有文字 (例如 (6th Ed.), (Kandel), (A1-A2) 等)
+        .replace(/\([^)]*\)/g, "")
+        .replace(/\[[^\]]*\]/g, "")
+        // 去除常見版本、次序、科目雜詞
+        .replace(/6th|5th|4th|3rd|2nd|1st|edition|ed\.|neu|plus|kandel|schritte|grammatik/gi, "")
+        // 去除標點符號與多餘空白
         .replace(/[^a-z0-9\u4e00-\u9fa5]/g, "")
         .trim();
     }
@@ -1010,6 +1016,7 @@
         const allQuestions = [...(subPool.desktop || []), ...(subPool.mobile || [])];
 
         // 依據模糊書名分組歸併，徹底杜絕多個相同課本選單
+       // 依據模糊書名分組歸併，徹底杜絕多個相同課本選單
         const unifiedBooksMap = new Map();
 
         allQuestions.forEach(q => {
@@ -1027,11 +1034,17 @@
 
           const normKey = normalizeBookTitle(rawBookTitle);
           if (!unifiedBooksMap.has(normKey)) {
+            // 清理標題名稱：去除括號與多餘版本後作為顯示標題
+            const cleanDisplayTitle = rawBookTitle.replace(/\([^)]*\)/g, "").replace(/\s+/g, " ").trim();
             unifiedBooksMap.set(normKey, {
-              title: rawBookTitle,
+              title: cleanDisplayTitle || rawBookTitle,
               chapters: new Map()
             });
           }
+
+          const bookEntry = unifiedBooksMap.get(normKey);
+          bookEntry.chapters.set(rawChap, (bookEntry.chapters.get(rawChap) || 0) + 1);
+        });
 
           const bookEntry = unifiedBooksMap.get(normKey);
           bookEntry.chapters.set(rawChap, (bookEntry.chapters.get(rawChap) || 0) + 1);
