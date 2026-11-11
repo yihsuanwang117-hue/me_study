@@ -997,6 +997,7 @@
 // 渲染階層式學習地圖（自動剃除無資料章節與空課本）
  // 渲染階層式學習地圖（以真實題庫為準，動態聚合同步）
    // 渲染階層式學習地圖（自動歸併重複課本、自動排除無資料項目）
+// 渲染階層式學習地圖（自動歸併重複課本、自動排除無資料項目）
     function renderLearningMap() {
       bookListEl.innerHTML = "";
 
@@ -1012,8 +1013,6 @@
         const subPool = CURRICULUM_DATA.questions[sub.key] || { desktop: [], mobile: [] };
         const allQuestions = [...(subPool.desktop || []), ...(subPool.mobile || [])];
 
-        // 依據模糊書名分組歸併，徹底杜絕多個相同課本選單
-       // 依據模糊書名分組歸併，徹底杜絕多個相同課本選單
         const unifiedBooksMap = new Map();
 
         allQuestions.forEach(q => {
@@ -1031,7 +1030,6 @@
 
           const normKey = normalizeBookTitle(rawBookTitle);
           if (!unifiedBooksMap.has(normKey)) {
-            // 清理標題名稱：去除括號與多餘版本後作為顯示標題
             const cleanDisplayTitle = rawBookTitle.replace(/\([^)]*\)/g, "").replace(/\s+/g, " ").trim();
             unifiedBooksMap.set(normKey, {
               title: cleanDisplayTitle || rawBookTitle,
@@ -1043,11 +1041,6 @@
           bookEntry.chapters.set(rawChap, (bookEntry.chapters.get(rawChap) || 0) + 1);
         });
 
-          const bookEntry = unifiedBooksMap.get(normKey);
-          bookEntry.chapters.set(rawChap, (bookEntry.chapters.get(rawChap) || 0) + 1);
-        });
-
-        // 建立學科摺疊面板（第一層）
         const subAccordion = document.createElement("div");
         subAccordion.className = "map-subject-accordion";
 
@@ -1101,6 +1094,7 @@
             });
 
             subBodyEl.appendChild(bookDiv);
+          });
         }
 
         bookListEl.appendChild(subAccordion);
