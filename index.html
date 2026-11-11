@@ -647,13 +647,9 @@
       }
     };
     // 擴充雜學 (Omnivore) 資料庫結構
-    if (!CURRICULUM_DATA.questions.omnivore) {
-      CURRICULUM_DATA.questions.omnivore = { desktop: [], mobile: [] };
-    }
+   
 
-    if (!cardPointers.omnivore) {
-      cardPointers.omnivore = { desktop: 0, mobile: 0 };
-    }
+  
 
     // 課本名稱模糊歸一化（徹底避免同一本書被拆成兩個選單）
     function normalizeBookTitle(title) {
@@ -670,6 +666,13 @@
     let currentDeviceMode = "desktop";
     let currentFilteredList = [];
     let currentActiveItem = null;
+    let cardPointers = {
+      neuro: { desktop: 0, mobile: 0 },
+      german: { desktop: 0, mobile: 0 },
+      spanish: { desktop: 0, mobile: 0 },
+      thai: { desktop: 0, mobile: 0 },
+      omnivore: { desktop: 0, mobile: 0 }
+    };
 
     let dailyData = {
       neuro: 0,
@@ -1860,7 +1863,6 @@ updatePomoDisplay();
     <button id="tab-neuro" class="tab-btn active" onclick="switchSubject('neuro')">🧠 神經科學</button>
     <button id="tab-german" class="tab-btn" onclick="switchSubject('german')">🇩🇪 德文 (A1)</button>
     <button id="tab-spanish" class="tab-btn" onclick="switchSubject('spanish')">🇪🇸 西文 (A2)</button>
-    <button id="tab-thai" class="tab-btn" onclick="switchSubject('thai')">🇹🇭 泰文 (興趣)</button>
     <button id="tab-thai" class="tab-btn" onclick="switchSubject('thai')">🇹🇭 泰文 (興趣)</button>
     <button id="tab-omnivore" class="tab-btn" onclick="switchSubject('omnivore')">🎨 雜學 (跨領域)</button>
   </div>
