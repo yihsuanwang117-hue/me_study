@@ -132,13 +132,57 @@
     .map-panel.show { display: flex; }
     .map-header { display: flex; justify-content: space-between; align-items: center; }
     .map-header h3 { font-size: 0.95rem; color: #93c5fd; }
-    .book-card {
-      background: rgba(15, 23, 42, 0.6);
+/* 學習地圖樹狀層級樣式 */
+    .map-subject-accordion {
+      background: rgba(15, 23, 42, 0.7);
       border: 1px solid #1e3a8a;
       border-radius: 8px;
-      padding: 12px;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+    .map-subject-header {
+      padding: 10px 14px;
+      background: #1e293b;
+      cursor: pointer;
+      font-weight: bold;
       display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+      transition: background 0.2s;
+    }
+    .map-subject-header:hover { background: #334155; }
+    .map-subject-body {
+      padding: 10px;
+      display: none;
       flex-direction: column;
+      gap: 8px;
+      background: rgba(15, 23, 42, 0.4);
+    }
+    .map-subject-body.show { display: flex; }
+
+    .book-card-header {
+      padding: 8px 12px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: border-color 0.2s;
+    }
+    .book-card-header:hover { border-color: #38bdf8; }
+    .book-card-body {
+      padding: 8px 12px;
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      border-left: 2px solid #38bdf8;
+      margin-left: 8px;
+      margin-top: 4px;
+    }
+    .book-card-body.show { display: flex; }
       gap: 6px;
     }
     .book-title { font-size: 0.9rem; font-weight: bold; color: #fff; }
@@ -803,24 +847,101 @@
       if (lenses.has(currentLensVal)) lensFilterEl.value = currentLensVal;
     }
 
+// 渲染階層式學習地圖（自動剃除無資料章節與空課本）
     function renderLearningMap() {
       bookListEl.innerHTML = "";
-      CURRICULUM_DATA.books.forEach(b => {
-        const card = document.createElement("div");
-        card.className = "book-card";
-        let tagsHtml = (b.chapters || []).map(ch => {
-          return `<span class="chapter-badge" style="cursor:pointer;" onclick="selectSpecificChapter('${ch}', '${b.subject}')">🎯 ${ch}</span>`;
-        }).join("");
 
-        card.innerHTML = `
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div class="book-title">📖 ${b.title}</div>
-            <button class="tool-btn" style="padding:2px 8px;" onclick="copyChapterPrompt('${b.title}')">📋 複製出題Prompt</button>
+      const subjectMeta = [
+        { key: "neuro", name: "🧠 Neuroscience (神經科學主線)" },
+        { key: "german", name: "🇩🇪 German (德文 A1-A2)" },
+        { key: "spanish", name: "🇪🇸 Spanish (西文 A2)" },
+        { key: "thai", name: "🇹🇭 Thai (泰文興趣)" }
+      ];
+
+      subjectMeta.forEach(sub => {
+        const subPool = CURRICULUM_DATA.questions[sub.key] || {};
+        const allQuestions = [...(subPool.desktop || []), ...(subPool.mobile || [])];
+
+        // 統計每個章節底下的有效題目數
+        const chapterCountMap = new Map();
+        allQuestions.forEach(q => {
+          let chName = q.chapter;
+          if (!chName && q.bookRef) {
+            const parts = q.bookRef.split("·");
+            chName = parts.length > 1 ? parts[1].trim() : parts[0].trim();
+          }
+          if (chName) {
+            chapterCountMap.set(chName, (chapterCountMap.get(chName) || 0) + 1);
+          }
+        });
+
+        // 篩選出該學科下「具有有效題目章節」的課本
+        const validBooks = (CURRICULUM_DATA.books || []).filter(b => {
+          if (b.subject !== sub.key) return false;
+          // 只保留底下有題目的章節
+          const activeChapters = (b.chapters || []).filter(ch => (chapterCountMap.get(ch) || 0) > 0);
+          return activeChapters.length > 0;
+        });
+
+        // 建立學科摺疊面板（第一層）
+        const subAccordion = document.createElement("div");
+        subAccordion.className = "map-subject-accordion";
+
+        const totalQuestionsInSub = allQuestions.length;
+        subAccordion.innerHTML = `
+          <div class="map-subject-header" onclick="this.nextElementSibling.classList.toggle('show')">
+            <span>${sub.name}</span>
+            <span style="font-size:0.75rem; color:#94a3b8;">${validBooks.length} 本教材 · ${totalQuestionsInSub} 道題目 ▾</span>
           </div>
-          <div class="book-version">版本：${b.version} (${b.subject.toUpperCase()})</div>
-          <div class="chapter-tags">${tagsHtml}</div>
+          <div class="map-subject-body"></div>
         `;
-        bookListEl.appendChild(card);
+
+        const subBodyEl = subAccordion.querySelector(".map-subject-body");
+
+        if (validBooks.length === 0) {
+          subBodyEl.innerHTML = `<div style="font-size:0.8rem; color:#64748b; padding:4px;">尚無匯入題目，請使用下方匯入題庫。</div>`;
+        } else {
+          // 建立課本（第二層）
+          validBooks.forEach((b, bIdx) => {
+            // 過濾並剔除無題目章節
+            const activeChapters = (b.chapters || []).filter(ch => (chapterCountMap.get(ch) || 0) > 0);
+
+            const bookDiv = document.createElement("div");
+            bookDiv.style.display = "flex";
+            bookDiv.style.flexDirection = "column";
+
+            const bookId = `sub_${sub.key}_book_${bIdx}`;
+            bookDiv.innerHTML = `
+              <div class="book-card-header" onclick="document.getElementById('${bookId}').classList.toggle('show')">
+                <span style="font-size:0.85rem; font-weight:bold; color:#f8fafc;">📖 ${b.title}</span>
+                <span style="font-size:0.75rem; color:#93c5fd;">${activeChapters.length} 個有效章節 ▾</span>
+              </div>
+              <div id="${bookId}" class="book-card-body">
+                <div style="font-size:0.75rem; color:#94a3b8;">版本：${b.version}</div>
+                <div class="chapter-tags" id="${bookId}_tags"></div>
+                <div style="display:flex; justify-content:flex-end; margin-top:4px;">
+                  <button class="tool-btn" style="padding:2px 8px; font-size:0.7rem;" onclick="copyChapterPrompt('${b.title}')">📋 複製出題 Prompt</button>
+                </div>
+              </div>
+            `;
+
+            const tagsContainer = bookDiv.querySelector(`#${bookId}_tags`);
+            // 建立章節標籤（第三層）
+            activeChapters.forEach(ch => {
+              const count = chapterCountMap.get(ch) || 0;
+              const badge = document.createElement("span");
+              badge.className = "chapter-badge";
+              badge.style.cursor = "pointer";
+              badge.innerHTML = `🎯 ${ch} <strong style="color:#38bdf8;">(${count}題)</strong>`;
+              badge.onclick = () => selectSpecificChapter(ch, b.subject);
+              tagsContainer.appendChild(badge);
+            });
+
+            subBodyEl.appendChild(bookDiv);
+          });
+        }
+
+        bookListEl.appendChild(subAccordion);
       });
     }
 
