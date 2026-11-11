@@ -1581,7 +1581,7 @@ ${userAns}
 
         alert(`🎉 成功更新教材【${data.book.title}】！\n章節已自動歸併至該課本目錄下。`);
         document.getElementById("import-json-text").value = "";
-        populateFilters();
+       updateFilterDropdowns();
         renderLearningMap();
         renderCard();
       } catch (err) {
@@ -1732,7 +1732,7 @@ ${userAns}
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
       const btn = document.getElementById(`tab-${sub}`);
       if (btn) btn.classList.add("active");
-      populateFilters();
+      updateFilterDropdowns();
       currentActiveItem = null;
       renderCard();
     };
