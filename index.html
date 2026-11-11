@@ -651,17 +651,14 @@
 
   
 
-   // 課本名稱強力歸一化：自動過濾版本、版次、括號與作者名
+// 課本名稱強力歸一化：自動過濾版本、版次、括號與作者名
     function normalizeBookTitle(title) {
       if (!title) return "主要教材";
       return title
         .toLowerCase()
-        // 去除括號及其內部所有文字 (例如 (6th Ed.), (Kandel), (A1-A2) 等)
         .replace(/\([^)]*\)/g, "")
         .replace(/\[[^\]]*\]/g, "")
-        // 去除常見版本、次序、科目雜詞
         .replace(/6th|5th|4th|3rd|2nd|1st|edition|ed\.|neu|plus|kandel|schritte|grammatik/gi, "")
-        // 去除標點符號與多餘空白
         .replace(/[^a-z0-9\u4e00-\u9fa5]/g, "")
         .trim();
     }
