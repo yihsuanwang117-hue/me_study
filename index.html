@@ -15,6 +15,7 @@
       --accent-german: #f59e0b;
       --accent-spanish: #10b981;
       --accent-thai: #ec4899;
+      --accent-omnivore: #a855f7;
       --locked-red: #ef4444;
       --mastery-red: #ef4444;
       --mastery-yellow: #f59e0b;
@@ -306,6 +307,9 @@
     .badge-german { background: rgba(245, 158, 11, 0.2); color: var(--accent-german); }
     .badge-spanish { background: rgba(16, 185, 129, 0.2); color: var(--accent-spanish); }
     .badge-thai { background: rgba(236, 72, 153, 0.2); color: var(--accent-thai); }
+    .badge-omnivore { background: rgba(168, 85, 247, 0.2); color: var(--accent-omnivore); }
+    .tab-btn.active.tab-omnivore { border-color: var(--accent-omnivore); color: #fff; }
+    
 
     .mastery-pill {
       font-size: 0.7rem;
@@ -642,6 +646,23 @@
         }
       }
     };
+    // 擴充雜學 (Omnivore) 資料庫結構
+    if (!CURRICULUM_DATA.questions.omnivore) {
+      CURRICULUM_DATA.questions.omnivore = { desktop: [], mobile: [] };
+    }
+
+    if (!cardPointers.omnivore) {
+      cardPointers.omnivore = { desktop: 0, mobile: 0 };
+    }
+
+    // 課本名稱模糊歸一化（徹底避免同一本書被拆成兩個選單）
+    function normalizeBookTitle(title) {
+      return (title || "")
+        .toLowerCase()
+        .replace(/a1|a2|b1|b2|edition|ed\.|neu|plus|grammatik|principles|of|the/gi, "")
+        .replace(/[^a-z0-9\u4e00-\u9fa5]/g, "")
+        .trim();
+    }
 
     let currentUser = null;
     let todayDate = getTaipeiDate();
@@ -713,7 +734,7 @@
       });
     }
 
-    function listenToCustomCurriculum(uid) {
+function listenToCustomCurriculum(uid) {
       const docRef = doc(db, `users/${uid}/meta/curriculum`);
       onSnapshot(docRef, (docSnap) => {
         if (docSnap.exists()) {
@@ -721,7 +742,7 @@
           if (custom.books) CURRICULUM_DATA.books = custom.books;
           if (custom.questions) CURRICULUM_DATA.questions = custom.questions;
         }
-        populateFilters();
+        updateFilterDropdowns();
         renderLearningMap();
         renderCard();
       });
@@ -789,24 +810,33 @@
     let selectedChaptersSet = new Set(); // 存放多選的章節清單
 
     // 取得當前科目的全量題目（並給予自動補齊容錯）
+  // 取得當前科目的全量題目，並自動校正 chapter 與 lens
     function getCurrentSubjectAllQuestions() {
-      const subjectPool = CURRICULUM_DATA.questions[currentSubject] || {};
+      const subjectPool = CURRICULUM_DATA.questions[currentSubject] || { desktop: [], mobile: [] };
       const allQ = [...(subjectPool.desktop || []), ...(subjectPool.mobile || [])];
 
-      // 自動修復：若無 chapter 則由 bookRef 解析；若無 lens 依關鍵字模糊標記
       allQ.forEach(q => {
-        if (!q.chapter && q.bookRef) {
-          const parts = q.bookRef.split("·");
-          q.chapter = parts.length > 1 ? parts[1].trim() : parts[0].trim();
+        if (!q.chapter) {
+          if (q.bookRef && q.bookRef.includes("·")) {
+            q.chapter = q.bookRef.split("·")[1].trim();
+          } else if (q.bookRef) {
+            q.chapter = q.bookRef.trim();
+          } else {
+            q.chapter = "核心重點單元";
+          }
         }
         if (!q.lens) {
-          const txt = (q.title + " " + q.prompt).toLowerCase();
-          if (txt.includes("電位") || txt.includes("離子") || txt.includes("電阻") || txt.includes("nernst") || txt.includes("導納")) {
-            q.lens = "🧲 生物物理/電生理";
-          } else if (txt.includes("受體") || txt.includes("蛋白") || txt.includes("遞質") || txt.includes("nmda")) {
-            q.lens = "🧬 生化/分子機制";
+          if (currentSubject === "neuro") {
+            const txt = (q.title + " " + q.prompt).toLowerCase();
+            if (txt.includes("電位") || txt.includes("離子") || txt.includes("電阻") || txt.includes("nernst")) {
+              q.lens = "🧲 生物物理/電生理";
+            } else if (txt.includes("受體") || txt.includes("蛋白") || txt.includes("遞質") || txt.includes("nmda")) {
+              q.lens = "🧬 生化/分子機制";
+            } else {
+              q.lens = "🧠 迴路/突觸整合";
+            }
           } else {
-            q.lens = "🧠 迴路/突觸整合";
+            q.lens = "通用核心概念";
           }
         }
       });
@@ -814,42 +844,38 @@
     }
 
     // 動態雙向連動：更新選單內容
+   // 雙向連動：更新範圍控制下拉選單（題數增加時立即同步）
     function updateFilterDropdowns() {
       const allQ = getCurrentSubjectAllQuestions();
       const currentChap = chapterFilterEl.value || "ALL";
       const currentLens = lensFilterEl.value || "ALL";
 
-      // 1. 根據目前選定的 lens，篩選出真正有題目的章節清單
       const availableChapters = new Set();
+      const availableLenses = new Set();
+
       allQ.forEach(q => {
         if (currentLens === "ALL" || q.lens === currentLens) {
           if (q.chapter) availableChapters.add(q.chapter);
         }
-      });
-
-      // 2. 根據目前選定的 chapter，篩選出真正有題目的學科視角清單
-      const availableLenses = new Set();
-      allQ.forEach(q => {
         if (currentChap === "ALL" || q.chapter === currentChap) {
           if (q.lens) availableLenses.add(q.lens);
         }
       });
 
-      // 重新渲染章節選單
+      // 渲染章節選單
       chapterFilterEl.innerHTML = '<option value="ALL">全部章節 (綜合輪播)</option>';
       availableChapters.forEach(ch => {
         const isSel = (ch === currentChap) ? "selected" : "";
         chapterFilterEl.innerHTML += `<option value="${ch}" ${isSel}>📖 ${ch}</option>`;
       });
 
-      // 重新渲染視角選單（自動動態擴充，例如匯入統計學後會自動出現）
+      // 渲染視角選單
       lensFilterEl.innerHTML = '<option value="ALL">全學科視角 (不拘)</option>';
       availableLenses.forEach(l => {
         const isSel = (l === currentLens) ? "selected" : "";
         lensFilterEl.innerHTML += `<option value="${l}" ${isSel}>${l}</option>`;
       });
 
-      // 渲染多選核取方塊
       renderMultiSelectCheckboxes(allQ);
     }
 
@@ -924,6 +950,7 @@
 
 // 渲染階層式學習地圖（自動剃除無資料章節與空課本）
  // 渲染階層式學習地圖（以真實題庫為準，動態聚合同步）
+   // 渲染階層式學習地圖（自動歸併重複課本、自動排除無資料項目）
     function renderLearningMap() {
       bookListEl.innerHTML = "";
 
@@ -931,37 +958,40 @@
         { key: "neuro", name: "🧠 Neuroscience (神經科學主線)" },
         { key: "german", name: "🇩🇪 German (德文 A1-A2)" },
         { key: "spanish", name: "🇪🇸 Spanish (西文 A2)" },
-        { key: "thai", name: "🇹🇭 Thai (泰文興趣)" }
+        { key: "thai", name: "🇹🇭 Thai (泰文興趣)" },
+        { key: "omnivore", name: "🎨 Omnivore (雜學與跨領域)" }
       ];
 
       subjectMeta.forEach(sub => {
-        const subPool = CURRICULUM_DATA.questions[sub.key] || {};
+        const subPool = CURRICULUM_DATA.questions[sub.key] || { desktop: [], mobile: [] };
         const allQuestions = [...(subPool.desktop || []), ...(subPool.mobile || [])];
 
-        // 1. 動態建立「課本 ➔ 章節 ➔ 題目數」樹狀結構
-        const booksMap = new Map();
+        // 依據模糊書名分組歸併，徹底杜絕多個相同課本選單
+        const unifiedBooksMap = new Map();
 
         allQuestions.forEach(q => {
-          // 解析課本名與章節名
-          let bookName = "主要教材";
-          let chapName = q.chapter;
+          let rawBookTitle = "主要教材";
+          let rawChap = q.chapter;
 
-          if (q.bookRef) {
+          if (q.bookRef && q.bookRef.includes("·")) {
             const parts = q.bookRef.split("·");
-            if (parts.length > 1) {
-              bookName = parts[0].trim();
-              if (!chapName) chapName = parts[1].trim();
-            } else {
-              bookName = q.bookRef.trim();
-            }
+            rawBookTitle = parts[0].trim();
+            if (!rawChap) rawChap = parts[1].trim();
+          } else if (q.bookRef) {
+            rawBookTitle = q.bookRef.trim();
           }
-          if (!chapName) chapName = "核心重點題目";
+          if (!rawChap) rawChap = "核心重點題目";
 
-          if (!booksMap.has(bookName)) {
-            booksMap.set(bookName, new Map());
+          const normKey = normalizeBookTitle(rawBookTitle);
+          if (!unifiedBooksMap.has(normKey)) {
+            unifiedBooksMap.set(normKey, {
+              title: rawBookTitle,
+              chapters: new Map()
+            });
           }
-          const chMap = booksMap.get(bookName);
-          chMap.set(chapName, (chMap.get(chapName) || 0) + 1);
+
+          const bookEntry = unifiedBooksMap.get(normKey);
+          bookEntry.chapters.set(rawChap, (bookEntry.chapters.get(rawChap) || 0) + 1);
         });
 
         // 建立學科摺疊面板（第一層）
@@ -969,12 +999,12 @@
         subAccordion.className = "map-subject-accordion";
 
         const totalQ = allQuestions.length;
-        const bookCount = booksMap.size;
+        const totalBooks = unifiedBooksMap.size;
 
         subAccordion.innerHTML = `
           <div class="map-subject-header" onclick="this.nextElementSibling.classList.toggle('show')">
             <span>${sub.name}</span>
-            <span style="font-size:0.75rem; color:#94a3b8;">${bookCount} 本教材 · ${totalQ} 道題目 ▾</span>
+            <span style="font-size:0.75rem; color:#94a3b8;">${totalBooks} 本教材 · ${totalQ} 道題目 ▾</span>
           </div>
           <div class="map-subject-body"></div>
         `;
@@ -985,30 +1015,30 @@
           subBodyEl.innerHTML = `<div style="font-size:0.8rem; color:#64748b; padding:4px;">尚無題目，請使用下方匯入。</div>`;
         } else {
           let bIdx = 0;
-          booksMap.forEach((chMap, bTitle) => {
+          unifiedBooksMap.forEach((bData, normKey) => {
             bIdx++;
             const bookDiv = document.createElement("div");
             bookDiv.style.display = "flex";
             bookDiv.style.flexDirection = "column";
 
-            const bookId = `dyn_sub_${sub.key}_${bIdx}`;
-            const chapterCount = chMap.size;
+            const bookId = `dyn_${sub.key}_book_${bIdx}`;
+            const chapterCount = bData.chapters.size;
 
             bookDiv.innerHTML = `
               <div class="book-card-header" onclick="document.getElementById('${bookId}').classList.toggle('show')">
-                <span style="font-size:0.85rem; font-weight:bold; color:#f8fafc;">📖 ${bTitle}</span>
+                <span style="font-size:0.85rem; font-weight:bold; color:#f8fafc;">📖 ${bData.title}</span>
                 <span style="font-size:0.75rem; color:#93c5fd;">${chapterCount} 個章節 ▾</span>
               </div>
               <div id="${bookId}" class="book-card-body">
                 <div class="chapter-tags" id="${bookId}_tags"></div>
                 <div style="display:flex; justify-content:flex-end; margin-top:4px;">
-                  <button class="tool-btn" style="padding:2px 8px; font-size:0.7rem;" onclick="copyChapterPrompt('${bTitle}')">📋 複製出題 Prompt</button>
+                  <button class="tool-btn" style="padding:2px 8px; font-size:0.7rem;" onclick="copyChapterPrompt('${bData.title}')">📋 複製出題 Prompt</button>
                 </div>
               </div>
             `;
 
             const tagsContainer = bookDiv.querySelector(`#${bookId}_tags`);
-            chMap.forEach((count, chTitle) => {
+            bData.chapters.forEach((count, chTitle) => {
               const badge = document.createElement("span");
               badge.className = "chapter-badge";
               badge.style.cursor = "pointer";
@@ -1096,16 +1126,18 @@
     }
 
     // 渲染卡片
-    window.renderCard = function() {
+   window.renderCard = function() {
       const neuroUnits = dailyData.neuro || 0;
       const subUnits = (dailyData.german || 0) + (dailyData.spanish || 0);
       const isSubLocked = (neuroUnits < 1.0) && (subUnits >= 0.5);
       
+      // 雜學 (omnivore) 與 泰文 (thai) 永遠不鎖定，保持學習探索彈性
       if (isSubLocked && (currentSubject === "german" || currentSubject === "spanish")) {
         lockOverlayEl.style.display = "flex";
         return;
       }
       lockOverlayEl.style.display = "none";
+      // ... 後續邏輯保持不變
 
       thaiImmersionBoxEl.style.display = currentSubject === "thai" ? "flex" : "none";
 
@@ -1829,6 +1861,8 @@ updatePomoDisplay();
     <button id="tab-german" class="tab-btn" onclick="switchSubject('german')">🇩🇪 德文 (A1)</button>
     <button id="tab-spanish" class="tab-btn" onclick="switchSubject('spanish')">🇪🇸 西文 (A2)</button>
     <button id="tab-thai" class="tab-btn" onclick="switchSubject('thai')">🇹🇭 泰文 (興趣)</button>
+    <button id="tab-thai" class="tab-btn" onclick="switchSubject('thai')">🇹🇭 泰文 (興趣)</button>
+    <button id="tab-omnivore" class="tab-btn" onclick="switchSubject('omnivore')">🎨 雜學 (跨領域)</button>
   </div>
 
   <!-- Card Body -->
